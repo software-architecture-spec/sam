@@ -57,8 +57,7 @@ manifest
 ├── extensions               quality concerns ISO 25010 doesn't cover cleanly
 │   ├── observability        (folds awkwardly under maintainability.analysability)
 │   ├── dataLifecycle        retention, deletion, archival
-│   ├── internationalization
-│   └── contextWindowManagement   AI-era concern
+│   └── internationalization
 ├── tensionsDeclared         which side of CAP/observability-cost/etc. did you pick?
 └── producer                 issuer + contact + issuedAt + validFor
 ```
@@ -112,7 +111,7 @@ These are starting points, not an exhaustive list. Producers populate `industryR
 
 ISO 25010:2023 was adopted as the canonical key set for `qualityAttributes` because it is the formal quality model that procurement, audits, and certifications already speak. Producers can populate the `overall` claim per characteristic for a coarse manifest, or drill into `subCharacteristics` for a granular one.
 
-ISO 25010 has known gaps for AI-era systems. Observability has no first-class home (it folds under `maintainability.analysability`); data lifecycle, i18n, and AI-context-window concerns have no formal home at all. These live in `extensions`.
+ISO 25010 has gaps. Observability has no first-class home (it folds under `maintainability.analysability`); data lifecycle and i18n have no formal home at all. These live in `extensions`.
 
 The operational `envelope` (tenancy, instantiation mode, privilege, network posture) is intentionally not part of `qualityAttributes` — these are deployment/operational signals, not quality claims. They answer "what was it designed for," which the formal quality model treats as input rather than output.
 
@@ -178,7 +177,7 @@ v0.1 — draft. Breaking changes expected. The goal of v0 is to get the field se
 - **Canonical-strings registry** for `industryRefs.standard` to reduce citation drift (SPDX License List pattern).
 - **Tension identifier registry** for `tensionsDeclared[].tension` well-known IDs (referenced by §5.1.11).
 - **Conformance test suite** — a corpus of known-good and known-bad manifests with expected validator outputs, with positive and negative cases for each conformance item in §5.1.
-- **Anchor-gap closures** flagged by the citations audit: `extensions.contextWindowManagement` → OWASP LLM Top 10 / NIST AI RMF; `envelope.privilege` + `envelope.network` → CIS Benchmarks / NIST SP 800-190; `extensions.dataLifecycle` deletion side → NIST SP 800-88 Rev. 1.
+- **Anchor-gap closures** flagged by the citations audit: `envelope.privilege` + `envelope.network` → CIS Benchmarks / NIST SP 800-190; `extensions.dataLifecycle` deletion side → NIST SP 800-88 Rev. 1.
 
 ---
 

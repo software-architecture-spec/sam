@@ -341,7 +341,7 @@ An extension MAY:
 
 ## §8 Stability
 
-Not every field in the schema carries the same maturity. Some are well-grounded in established standards (the `qualityAttributes` keys come from ISO/IEC 25010:2023). Some are intentionally exploratory (the `contextWindowManagement` extension addresses an AI-era concern with no formal home in any quality model yet). Consumers need to know which is which to plan their reliance.
+Not every field in the schema carries the same maturity. Some are well-grounded in established standards (the `qualityAttributes` keys come from ISO/IEC 25010:2023). Some are intentionally exploratory (the `extensions` block holds quality concerns ISO 25010 doesn't yet model cleanly — observability, data lifecycle, internationalization). Consumers need to know which is which to plan their reliance.
 
 ### §8.1 Stability tiers
 

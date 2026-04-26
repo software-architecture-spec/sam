@@ -334,10 +334,6 @@
           "version": "46"
         }
       ]
-    },
-    "contextWindowManagement": {
-      "status": "declared",
-      "summary": "ADRs in /docs/adr. Workflow patterns documented in /docs/patterns. ~60 modules, fits standard agent context."
     }
   },
   "tensionsDeclared": [

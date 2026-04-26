@@ -308,10 +308,6 @@
         "internationalization": {
           "$ref": "#/$defs/qualityAttributeClaim",
           "description": "Locale support, string externalization, RTL, CLDR pluralization. Adjacent to interactionCapability.inclusivity but operationally distinct."
-        },
-        "contextWindowManagement": {
-          "$ref": "#/$defs/qualityAttributeClaim",
-          "description": "AI-era concern. Pattern catalog, ADRs, exemplar density. The producer's claim about how a downstream AI agent can navigate this codebase coherently."
         }
       }
     },

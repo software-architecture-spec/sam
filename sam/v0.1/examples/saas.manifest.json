@@ -265,10 +265,6 @@
     "internationalization": {
       "status": "not_applicable",
       "summary": "Backend API. Strings localized at the UI layer."
-    },
-    "contextWindowManagement": {
-      "status": "declared",
-      "summary": "ADRs in /docs/adr. Pattern catalog in /docs/patterns. ~120 modules, fits in standard agent context."
     }
   },
   "tensionsDeclared": [
