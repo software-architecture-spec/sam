@@ -6,6 +6,8 @@ SBOM tells you what's inside the software. SLSA tells you how it was built. Open
 
 > A nutrition label for architecture, signed by the maintainer, shipped on every artifact.
 
+> **Working draft — not adoption-ready.** SAM is a v0 working proposal. Breaking changes are still possible (per `SPECIFICATION.md §6.1`); the stable target is v1. We are publishing this draft to gather technical review and contributors, *not* to declare a finished standard. If you operate SAMs in production today, you are early — please file feedback. **What we're asking for:** technical review of the schema and spec from supply-chain, security, and procurement practitioners; real-world authoring feedback (what's hard, what's missing); citations and registry contributions; implementations of the spec-aware validator surface (§5.1.6, §5.1.7, §5.1.9, §5.1.11). See [CONTRIBUTING.md](CONTRIBUTING.md), [ROADMAP.md](ROADMAP.md), and the [issue templates](.github/ISSUE_TEMPLATE/).
+
 The current version is **v0.2**. v0.1 is frozen at [`/sam/v0.1/`](sam/v0.1/) and remains accessible at its URIs (per `SPECIFICATION.md §6.3`, same-MAJOR backward compatibility).
 
 > **Normative reference.** The [SPECIFICATION.md](sam/v0.2/SPECIFICATION.md) document is the normative source for what a conforming SAM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–9 are written: Scope, Terminology, Conformance language, Threat model, Definition of a conforming SAM, Versioning, Extensibility, Stability, **SAM Levels (L0–L3)**. Authoring guide, verification guide, and lifecycle policy are deferred.

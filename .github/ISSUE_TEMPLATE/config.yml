@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Specification (read first)
+    url: https://software-architecture-spec.github.io/sam/v0.2/SPECIFICATION.md
+    about: Read the normative specification before filing schema or conformance issues.
+  - name: Roadmap
+    url: https://github.com/software-architecture-spec/software-architecture-spec.github.io/blob/main/ROADMAP.md
+    about: Check whether your concern is already on the roadmap.
+  - name: Security concerns
+    url: https://github.com/software-architecture-spec/software-architecture-spec.github.io/security/advisories/new
+    about: Report security issues privately. Do NOT use the public issue tracker.
