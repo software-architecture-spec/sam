@@ -188,6 +188,7 @@ This means cosign, sigstore, and any in-toto-aware tooling can sign and verify S
 - [`v0.2/schema.json`](v0.2/schema.json) — the JSON Schema (Draft 2020-12) with `envelope.serviceLevels`, `intent.tenancy.dataResidency[]`, and enriched `industryRefs[]` fields
 - [`v0.2/examples/saas.manifest.json`](v0.2/examples/saas.manifest.json) — multi-tenant SaaS API (public-cloud shape)
 - [`v0.2/examples/internal-enterprise.manifest.json`](v0.2/examples/internal-enterprise.manifest.json) — internal employee-onboarding portal (corporate-internal shape: SSO, no public exposure, regulatory retention, WCAG 2.2 AA)
+- [`v0.2/examples/caddy.manifest.json`](v0.2/examples/caddy.manifest.json) — illustrative artifact-layer manifest for [Caddy](https://caddyserver.com/) (a real OSS web server). Demonstrates how a small, recognizable, single-binary OSS project would declare its purpose, operational envelope, third-party operational dependencies (ACME provider), and quality claims grounded in IETF RFCs. *Not* a real producer-signed manifest from the Caddy project; included as teaching material.
 - [`v0.2/conformance/`](v0.2/conformance/) — test corpus indexed by `manifest.json`; positive and negative cases per `§5.1` plus four new cases for v0.2 features.
 
 ### Frozen prior versions

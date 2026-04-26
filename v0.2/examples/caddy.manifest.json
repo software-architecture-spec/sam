@@ -1,0 +1,250 @@
+{
+  "manifestVersion": "0.2",
+  "subject": {
+    "layer": "artifact",
+    "name": "caddy",
+    "version": "2.8.4",
+    "digest": {
+      "sha256": "f3a2b1c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2"
+    },
+    "sbomRef": "https://github.com/caddyserver/caddy/releases/download/v2.8.4/caddy_2.8.4_sbom.cdx.json"
+  },
+  "intent": {
+    "purpose": "Modern, fast, multi-platform HTTP/1.1, HTTP/2, and HTTP/3 web server with automatic HTTPS via ACME, reverse-proxy and load-balancing primitives, and a JSON/Caddyfile configuration model. Designed for operator deployment on a single host or behind a load balancer; serves anonymous end-user HTTP traffic for whatever sites the operator configures.",
+    "audience": "single_user",
+    "tenancy": {
+      "model": "none"
+    },
+    "outOfScope": [
+      "Multi-tenant SaaS isolation between distinct customer organizations",
+      "Built-in WAF / application-layer threat detection (use a sibling tool)",
+      "Stateful application logic (Caddy is a server; application logic lives upstream)",
+      "Air-gapped deployment without first-time ACME contact (use a manually provisioned cert)"
+    ]
+  },
+  "envelope": {
+    "throughput": {
+      "targetRps": 10000,
+      "latency": {
+        "p50Ms": 1,
+        "p95Ms": 5,
+        "p99Ms": 15
+      },
+      "concurrency": {
+        "maxConcurrentRequests": 50000
+      }
+    },
+    "scaling": {
+      "axis": "horizontal",
+      "stateful": false,
+      "maxInstances": 100,
+      "verticalCeiling": {
+        "cpuCores": 16,
+        "memoryGiB": 4
+      }
+    },
+    "instantiation": {
+      "mode": "multi_instance",
+      "coordinationDependency": "none (each instance manages its own cert store; optional shared backend via the redis/distributed-storage modules)"
+    },
+    "privilege": {
+      "runtime": "capability_scoped",
+      "linuxCapabilities": ["CAP_NET_BIND_SERVICE"],
+      "filesystemAccess": "scoped_write"
+    },
+    "network": {
+      "posture": "bidirectional",
+      "exposedPorts": [
+        { "port": 80, "protocol": "http", "purpose": "ACME HTTP-01 challenge + redirect-to-HTTPS" },
+        { "port": 443, "protocol": "https", "purpose": "Primary HTTPS listener (HTTP/2 + HTTP/3)" },
+        { "port": 2019, "protocol": "http", "purpose": "Admin API on localhost (configurable; can be disabled)" }
+      ],
+      "requiredEgress": [
+        { "host": "acme-v02.api.letsencrypt.org", "port": 443, "protocol": "https", "purpose": "ACME directory + cert issuance (default CA; configurable to ZeroSSL or any RFC 8555 ACME server)" },
+        { "host": "ocsp.int-x3.letsencrypt.org", "port": 80, "protocol": "http", "purpose": "OCSP stapling refresh" }
+      ]
+    },
+    "dependencies": [
+      {
+        "name": "ACME provider (Let's Encrypt)",
+        "type": "infrastructure",
+        "criticality": "critical",
+        "failureMode": "degraded",
+        "dataFlow": "bidirectional",
+        "dataClassifications": ["public"],
+        "jurisdiction": ["US", "GLOBAL"],
+        "alternative": "substitutable",
+        "industryRefs": [
+          { "standard": "RFC 8555", "conformance": "ACME protocol", "referenceUri": "https://www.rfc-editor.org/rfc/rfc8555" }
+        ]
+      },
+      {
+        "name": "Configured upstream backends",
+        "type": "infrastructure",
+        "criticality": "important",
+        "failureMode": "degraded",
+        "dataFlow": "bidirectional",
+        "dataClassifications": ["public", "internal"],
+        "alternative": "not_substitutable",
+        "industryRefs": []
+      }
+    ]
+  },
+  "qualityAttributes": {
+    "performanceEfficiency": {
+      "overall": {
+        "status": "verified",
+        "summary": "Sub-millisecond P50 for static content; HTTP/3 enabled by default. Benchmarks published per release.",
+        "evidence": [
+          { "type": "load_test", "uri": "https://caddyserver.com/docs/architecture#performance" }
+        ],
+        "industryRefs": [
+          { "standard": "RFC 9114", "conformance": "HTTP/3", "referenceUri": "https://www.rfc-editor.org/rfc/rfc9114" }
+        ]
+      },
+      "subCharacteristics": {
+        "timeBehaviour": { "status": "verified", "summary": "P50 < 1 ms for static content on commodity hardware." },
+        "resourceUtilization": { "status": "declared", "summary": "Single-process Go runtime; ~30 MB RSS at idle, scales linearly with concurrent connections." },
+        "capacity": { "status": "declared", "summary": "Tens of thousands of concurrent HTTP/2 streams per instance; bounded by ulimit and ephemeral-port range." }
+      }
+    },
+    "security": {
+      "overall": {
+        "status": "verified",
+        "summary": "Modern TLS defaults; automatic HTTPS via ACME with HSTS preload-eligible config. Independent third-party audit performed pre-2.0; ongoing CVE response via security@caddyserver.com.",
+        "evidence": [
+          { "type": "security_scan", "uri": "https://github.com/caddyserver/caddy/security/advisories" }
+        ],
+        "industryRefs": [
+          { "standard": "RFC 8446", "conformance": "TLS 1.3", "referenceUri": "https://www.rfc-editor.org/rfc/rfc8446" },
+          { "standard": "RFC 8555", "conformance": "ACME protocol" },
+          { "standard": "OWASP ASVS", "version": "5.0", "conformance": "L1 (web-server scope; application-layer claims belong to the upstream)" }
+        ]
+      },
+      "subCharacteristics": {
+        "confidentiality": {
+          "status": "verified",
+          "summary": "TLS 1.3 default; TLS 1.2 with modern cipher suites; HSTS preload-eligible config; OCSP stapling enabled by default."
+        },
+        "integrity": {
+          "status": "verified",
+          "summary": "TLS-protected connections; release binaries published with checksums and Sigstore provenance."
+        },
+        "authenticity": {
+          "status": "verified",
+          "summary": "Automatic certificate issuance via ACME; renewals scheduled and audited via internal storage."
+        },
+        "resistance": {
+          "status": "declared",
+          "summary": "Default rate limits via the rate_limit module; safe defaults against Slowloris and oversized-request attacks."
+        }
+      }
+    },
+    "reliability": {
+      "overall": {
+        "status": "declared",
+        "summary": "Used in production by major sites (caddyserver.com, FastMail's MX endpoints, others). No formal availability claim — depends on operator deployment."
+      },
+      "subCharacteristics": {
+        "faultTolerance": { "status": "declared", "summary": "Health-checked upstream pools; circuit-breaker semantics in reverse_proxy module." },
+        "recoverability": { "status": "declared", "summary": "Stateless instances; cert store reconstructable from ACME on first request after volume loss." }
+      }
+    },
+    "compatibility": {
+      "overall": {
+        "status": "verified",
+        "summary": "Implements HTTP/1.1, HTTP/2, HTTP/3, and TLS 1.2/1.3 to specification.",
+        "industryRefs": [
+          { "standard": "RFC 9110", "conformance": "HTTP semantics" },
+          { "standard": "RFC 9112", "conformance": "HTTP/1.1" },
+          { "standard": "RFC 9113", "conformance": "HTTP/2" },
+          { "standard": "RFC 9114", "conformance": "HTTP/3" }
+        ]
+      }
+    },
+    "maintainability": {
+      "overall": {
+        "status": "verified",
+        "summary": "Open-source Go codebase; modular plugin system via xcaddy; comprehensive test suite in CI; semver discipline.",
+        "evidence": [
+          { "type": "ci_run", "uri": "https://github.com/caddyserver/caddy/actions" }
+        ]
+      }
+    },
+    "flexibility": {
+      "overall": {
+        "status": "verified",
+        "summary": "Single binary; cross-compiled for Linux, macOS, Windows, FreeBSD, on amd64/arm64; container images on Docker Hub.",
+        "industryRefs": [
+          { "standard": "OCI Image Spec", "version": "1.0", "referenceUri": "https://github.com/opencontainers/image-spec" }
+        ]
+      },
+      "subCharacteristics": {
+        "installability": {
+          "status": "verified",
+          "summary": "Distributed via apt/dnf, Homebrew, official Docker image, and direct binary download. Custom builds with plugins via xcaddy."
+        },
+        "adaptability": {
+          "status": "verified",
+          "summary": "Same binary across platforms; configuration via Caddyfile (DSL) or JSON; admin API for runtime reconfiguration."
+        },
+        "scalability": {
+          "status": "declared",
+          "summary": "Horizontal scaling via standard load-balancer patterns; cert-storage module supports shared backends for stateless multi-instance deployments."
+        },
+        "replaceability": {
+          "status": "verified",
+          "summary": "Conforms to HTTP RFCs and ACME RFC 8555; downstream consumers can replace Caddy with any conforming HTTPS server."
+        }
+      }
+    },
+    "interactionCapability": {
+      "overall": {
+        "status": "not_applicable",
+        "summary": "Caddy is a backend service; it has no end-user UI surface. Operator-facing surface is Caddyfile/JSON configuration and the admin API."
+      }
+    },
+    "functionalSuitability": {
+      "overall": {
+        "status": "verified",
+        "summary": "Conformance with HTTP and ACME RFCs; functional test suite covers all configuration directives and modules in the standard distribution."
+      }
+    },
+    "safety": {
+      "overall": { "status": "not_applicable", "summary": "No safety-critical surface." }
+    }
+  },
+  "extensions": {
+    "observability": {
+      "status": "verified",
+      "summary": "Prometheus-compatible /metrics endpoint exposing request rate, response time, upstream health, and certificate-storage statistics. Structured JSON or human-readable logs to stderr; OpenTelemetry tracing via the tracing module.",
+      "industryRefs": [
+        { "standard": "OpenTelemetry", "version": "1.40.0", "referenceUri": "https://opentelemetry.io/docs/specs/" }
+      ]
+    },
+    "dataLifecycle": {
+      "status": "declared",
+      "summary": "Cert store retained on disk indefinitely; renewed automatically before expiry. No request payload storage; access logs retained per operator configuration.",
+      "industryRefs": [
+        { "standard": "NIST SP 800-88 Rev. 1", "conformance": "Secure deletion of decommissioned cert volumes" }
+      ]
+    },
+    "internationalization": {
+      "status": "not_applicable",
+      "summary": "Wire protocol is HTTP; payload is opaque to Caddy. Operator-facing log output is English."
+    }
+  },
+  "tensionsDeclared": [
+    {
+      "tension": "x:tls_provisioning_latency",
+      "posture": "Default-on automatic HTTPS adds a one-time first-request latency for ACME challenge while the cert is issued; renewals are scheduled in the background and do not affect request latency. Caddy chooses security-by-default over zero first-request latency.",
+      "rationale": "Operators who require zero first-request latency on a new domain can pre-provision certs (via the on_demand TLS configuration or manual provisioning) instead of relying on automatic issuance."
+    }
+  ],
+  "producer": {
+    "name": "Caddy Maintainers (illustrative — this is a SAM example, not a real producer-signed manifest from the Caddy project)",
+    "contact": "security@caddyserver.com",
+    "issuedAt": "2026-04-26T00:00:00Z",
+    "validFor": "P180D"
+  }
+}
