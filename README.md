@@ -8,6 +8,8 @@ SBOM tells you what's inside the artifact. SLSA tells you how it was built. Open
 
 This is the v0 schema.
 
+> **Normative reference.** The [SPECIFICATION.md](SPECIFICATION.md) document is the normative source for what a conforming DIM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–5 of the specification (Scope, Terminology, Conformance language, Threat model, Definition of a conforming DIM) are written. §§6+ (DIM levels, authoring guide, verification guide, lifecycle policy) are deferred.
+
 > **Note on the namespace.** The schema's `$id` (`https://quality-software.dev/...`) is a placeholder. For DIM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group), not a personal domain. Treat the current `$id` as draft.
 
 ---
@@ -169,7 +171,7 @@ v0.1 — draft. Breaking changes expected. The goal of v0 is to get the field se
 
 ### Planned for v0.2 / next sessions
 
-- **Narrative specification (`SPECIFICATION.md`)** — threat model, DIM levels (L0 = no manifest, L1 = declared-only, L2 = with `industryRefs`, L3 = verified with evidence), authoring guide, verification guide, lifecycle policy.
+- **Narrative specification §§6+** — DIM levels (L0 = no manifest, L1 = declared-only, L2 = with `industryRefs`, L3 = verified with evidence), authoring guide, verification guide, lifecycle policy. (§§1–5 are now written in [SPECIFICATION.md](SPECIFICATION.md).)
 - **Vendor extension namespace.** Allow `x-<vendor>-<key>` keys on extension-point objects (`qualityAttributes`, `extensions`, `qualityAttributeClaim`) following the CycloneDX / OpenAPI pattern.
 - **Stability annotations** per field (stable / experimental / deprecated) to make the maintainability path explicit.
 - **Canonical-strings registry** for `industryRefs.standard` to reduce citation drift.
