@@ -1,0 +1,12 @@
+# Jekyll config for the SAM Pages site.
+#
+# GitHub Pages' default config (via the github-pages gem) excludes a few
+# repo-metadata files from Jekyll rendering, including CONTRIBUTING.md and
+# CODE_OF_CONDUCT.md. They're served as raw markdown rather than rendered HTML.
+#
+# This `include` block tells Jekyll to render them anyway, so links from the
+# rendered README and other Pages-served documents resolve to HTML.
+
+include:
+  - CONTRIBUTING.md
+  - CODE_OF_CONDUCT.md
