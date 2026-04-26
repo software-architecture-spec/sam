@@ -1,8 +1,8 @@
 # Software Architecture Manifest (SAM)
 
-A producer-signed, machine-readable declaration of what a software artifact was designed to do and the operational envelope it was designed for.
+A producer-signed, machine-readable declaration of what software was designed to do and the operational envelope it was designed for.
 
-SBOM tells you what's inside the artifact. SLSA tells you how it was built. OpenSSF Scorecard tells you whether good practices were followed. **SAM tells you what the producer designed it to be.**
+SBOM tells you what's inside the software. SLSA tells you how it was built. OpenSSF Scorecard tells you whether good practices were followed. **SAM tells you what the producer designed it to be.**
 
 > A nutrition label for architecture, signed by the maintainer, shipped on every artifact.
 

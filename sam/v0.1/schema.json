@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://software-architecture-spec.github.io/sam/v0.1/schema.json",
   "title": "Software Architecture Manifest",
-  "description": "Producer-signed declaration of a software artifact's intended properties — its purpose, operational envelope, and quality attributes — for consumption by humans, AI agents, and automated tooling. Companion to SBOM (contents) and SLSA (build provenance); SAM declares what the software was designed to be. Predicate-only: signing happens via DSSE/sigstore wrapping this document.",
+  "description": "Producer-signed declaration of software's intended properties — its purpose, operational envelope, and quality attributes — for consumption by humans, AI agents, and automated tooling. Companion to SBOM (contents) and SLSA (build provenance); SAM declares what software was designed to be. Predicate-only: signing happens via DSSE/sigstore wrapping this document.",
   "type": "object",
   "required": ["manifestVersion", "subject", "intent", "envelope", "qualityAttributes", "producer"],
   "additionalProperties": false,
