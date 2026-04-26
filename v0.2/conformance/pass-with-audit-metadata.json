@@ -1,0 +1,60 @@
+{
+  "manifestVersion": "0.2",
+  "subject": {
+    "layer": "artifact",
+    "name": "test-subject",
+    "version": "1.0.0",
+    "digest": {
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "intent": {
+    "purpose": "Conformance corpus test fixture.",
+    "audience": "single_user",
+    "tenancy": {
+      "model": "none"
+    }
+  },
+  "envelope": {
+    "throughput": {},
+    "scaling": {
+      "axis": "none"
+    },
+    "instantiation": {
+      "mode": "singleton"
+    },
+    "privilege": {
+      "runtime": "unprivileged"
+    },
+    "network": {
+      "posture": "isolated"
+    }
+  },
+  "qualityAttributes": {
+    "security": {
+      "overall": {
+        "status": "verified",
+        "summary": "SOC 2 Type 2 audited.",
+        "evidence": [
+          {
+            "type": "security_scan",
+            "uri": "https://example.com/audit-report.pdf"
+          }
+        ],
+        "industryRefs": [
+          {
+            "standard": "SOC 2",
+            "conformance": "Type 2",
+            "auditor": "Schellman",
+            "auditPeriod": "2025-01-01 to 2025-12-31",
+            "dateAttested": "2026-02-15T00:00:00Z"
+          }
+        ]
+      }
+    }
+  },
+  "producer": {
+    "name": "Test Producer",
+    "issuedAt": "2026-04-26T15:00:00Z"
+  }
+}

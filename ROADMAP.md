@@ -4,55 +4,66 @@ This roadmap is **feedback-driven, not predetermined**. Everything below shifts 
 
 The stable target is **v1**. The path there is incremental minor releases that close gaps surfaced by real use.
 
-## Current release: v0.1
+## Current release: v0.2
 
-First public draft. Live at `https://software-architecture-spec.github.io/sam/v0.1/`.
+Live at `https://software-architecture-spec.github.io/sam/v0.2/`.
 
-- Specification §§1–9 (Scope, Terminology, Conformance language, Threat model, Conforming SAM, Versioning, Extensibility, Stability, SAM Levels)
-- JSON Schema with §7 extensibility (`patternProperties` for `x-*`) and §8 stability annotations
-- `envelope.dependencies[]` for operational third-party visibility
-- Conformance test corpus (8 pass + 12 fail cases)
-- Validator + CI + opt-in pre-commit hook
-- `registry/standards.json` (22 entries) and `registry/tensions.json` (5 well-known IDs)
+- Specification §§1–10 (Scope, Terminology, Conformance language, Threat model, Conforming SAM, Versioning, Extensibility, Stability, SAM Levels, **Definitions appendix**)
+- JSON Schema with `envelope.serviceLevels`, `intent.tenancy.dataResidency[]`, and `industryRefs[]` audit metadata (auditor / auditPeriod / dateAttested)
+- Open-content definitions in §10 covering all 9 ISO 25010 characteristics and ~40 sub-characteristics — SAM is now usable without paywalled ISO access
+- Conformance corpus extended (positive + negative cases for the new fields)
 
+v0.1 frozen at `/sam/v0.1/` and remains valid per §6.3 same-MAJOR compatibility.
 
+## Shipped in v0.2
 
-## Near-term — v0.2 candidates
+These were the v0.2 candidates carried forward from the v0.1 review and now in the schema:
 
-These are likely to land next, **subject to feedback**. Each came from an early consumer-side review of the v0.1 examples that flagged gaps a procurement/security reviewer felt.
+- **Definitions appendix** (`SPECIFICATION.md §10`) — all 9 ISO 25010 characteristics and 40 sub-characteristics defined in our own CC-BY-4.0 wording with example producer claims. Closes the paywalled-ISO gap.
+- **`envelope.serviceLevels`** (service/product-layer only; `if/then` enforces) — `availability`, `rpoMinutes` / `rtoMinutes`, `supportWindow`, `incidentResponse` keyed by severity, `vulnerabilityPatch` keyed by severity, `industryRefs[]`.
+- **`intent.tenancy.dataResidency[]`** — string array; ISO 3166 codes, regional groupings, cloud regions, or producer-defined options.
+- **`industryRefs[]` audit-metadata enrichment** — optional `auditor`, `auditPeriod`, `dateAttested` on every `industryRefs` entry (qualityAttributes claims, dependencies, serviceLevels).
+- **Recommended open references** (`§1.5`) — Wikipedia ISO 25010, arc42 quality model, NIST SP 800-160 Vol. 1 as informational broadening for readers who want context beyond the §10 definitions.
 
-### `envelope.serviceLevels` (service- and product-layer only)
+## Near-term — v0.3 candidates
 
-A bucket for SLA / SLO claims that sit alongside the operational envelope:
+Drawn from a review of canonical systems-design literature (Release It! / DDIA / Fowler PEAA / SRE Book / Newman / Richards & Ford / Ousterhout) — each names a vocabulary producers and consumers commonly use that SAM has no slot for today.
 
-- `availability` (e.g., "99.9%")
-- `rpoMinutes`, `rtoMinutes`
-- `supportWindow` (e.g., "24x7", "business-hours-EU")
-- `incidentResponse` keyed by severity (critical / high / medium / low → hours-to-acknowledge)
-- `vulnerabilityPatch` keyed by severity (→ days-to-fix)
-- `industryRefs[]` for SOC 2 trust-criteria, ITIL, or contract-URI citations
+### `architecturalStyle` (declarative)
 
-Forbidden at `subject.layer = artifact` via `if/then` — artifacts don't have SLAs; services do.
+Single-value enum on `intent` declaring the architectural style:
 
-### `intent.tenancy.dataResidency[]`
+`monolith | modular_monolith | microservices | serverless | event_driven | actor | hybrid`
 
-Where the subject's primary data is stored. Same shape as the existing `isolationGuarantees[]` (string array). Values: ISO 3166 codes, regional groupings ("EU"), cloud regions ("us-east-1"), or producer-defined options ("customer-selectable: EU, US"). Empty/omitted = no claim.
+Producers can scope their claims; consumers can match the style against their target architecture. Distinct from `subject.layer` (granularity of *this* manifest) and from `subject.components[]` (composition).
 
-Tenancy is the natural home — tenancy speaks to *how* data is partitioned; residency is *where* the partitions sit. Keeping them adjacent lets consumers read both at once.
+### `architecturalPatterns[]` + `registry/patterns.json`
 
-### `industryRefs[]` audit-metadata enrichment
+A new array on `qualityAttributes.*.overall` (or top-level `architecturalPatterns[]` — to be decided) for declaring named patterns the software implements:
 
-Optional fields on each `industryRefs[]` entry:
+```
+[
+  { "id": "circuit_breaker", "appliesTo": ["dependencies", "reliability"] },
+  { "id": "cqrs", "appliesTo": ["data"] },
+  { "id": "cache_aside", "appliesTo": ["performance"] }
+]
+```
 
-- `auditor` — the named third party that performed the audit (e.g., "PwC", "Schellman")
-- `auditPeriod` — coverage window (e.g., "2025-01-01 to 2025-12-31")
-- `dateAttested` — ISO 8601 timestamp of the attestation
+Companion `registry/patterns.json` (same shape as `tensions.json`) seeds canonical IDs from Release It! (`circuit_breaker`, `bulkhead`, `timeout`, `fail_fast`, `retry_with_backoff`, `fallback`), DDIA (`event_sourcing`, `cqrs`, `saga`, `outbox`), Fowler PEAA (`unit_of_work`, `repository`), and caching literature (`cache_aside`, `write_through`, `write_back`).
 
-Closes the consumer-side gap that "SOC 2 Type 2" with no date / auditor / scope is procurement-useless.
+Closes the gap that producers can't declare "this implements the circuit-breaker pattern" or "this is event-sourced" — vocabulary every senior engineer expects to see.
 
-## Spec content deferred from v0.1
+### Storage architecture detail
 
-These were named in v0.1's "Open issues" and remain on the path to v1:
+`envelope.persistence` today is a `stores[]` enum (`sql`, `kv`, `document`, `blob`, `search`, `queue`, `filesystem`, `other`). v0.3 candidates: replication topology (single / primary-replica / multi-primary / sharded), consistency model (strong / read-after-write / eventual), backup posture (none / snapshot / continuous), encryption posture (at-rest / in-flight / both).
+
+### Concurrency-model detail
+
+`envelope.instantiation.mode` today covers singleton / multi_instance / leader_elected / sharded. v0.3 candidates: ordering guarantees (none / per-key / total), idempotency claims, conflict-resolution model (last-write-wins / CRDT / application-defined).
+
+## Spec content deferred from v0.2
+
+Carried forward unchanged into v0.3+:
 
 - **Authoring guide** — practical guidance for producers on what to populate per attribute and how to write honest summaries.
 - **Verification guide** — practical guidance for consumers on how to evaluate a SAM in different decision contexts.
@@ -70,6 +81,7 @@ These are prose-heavy and depend on observed authoring patterns. They'll land on
 
 - **Growth of `standards.json`** — community contributions adding aliases and new entries as real SAMs cite standards we haven't seen yet.
 - **Governance model** — when a new standard is added, who decides the canonical spelling? The current advisory-not-enforced status keeps the cost low; if/when we reach working-group adoption the model formalizes.
+- **`registry/patterns.json`** — seeded in v0.3 alongside `architecturalPatterns[]`.
 
 ## Long-horizon
 
@@ -80,15 +92,32 @@ These are prose-heavy and depend on observed authoring patterns. They'll land on
 
 ## Open questions
 
-These came out of an early consumer-side review of the v0.1 examples. Each is either a v0.2 candidate (above) or explicitly out of scope (below) — listed here so the reasoning is visible.
+These came out of consumer-side review and design-pattern coverage analysis. Each is either resolved (above), v0.3 candidate (above), or out-of-scope (below) — listed here so the reasoning is visible.
 
-- **Data residency of the subject itself.** v0.1 declares jurisdiction per dependency but not where the subject's own data lives. Consumer review flagged this as a critical DORA + GDPR Ch. V gap. *Resolution:* added as a v0.2 candidate at `intent.tenancy.dataResidency[]`.
-- **Audit metadata on `industryRefs[]`.** A `SOC 2 Type 2` cite without auditor / period / date is procurement-useless. *Resolution:* v0.2 candidate.
-- **SLA / SLO surface.** Incident-response SLA, vulnerability-patch SLA, MTTR/MTBF, support hours, RPO/RTO are quality claims real consumers ask for. *Resolution:* v0.2 candidate at `envelope.serviceLevels` (service- and product-layer only).
-- **Subcontractor / nth-party chain per dependency.** DORA Art. 28 cares about sub-outsourcing. *Resolution:* **out of scope** — see below. SAM declares architectural facts; tracking each provider's own subcontractor chain is the consumer's compliance register, not the producer's manifest.
-- **Exit / portability strategy per dependency.** Single `alternative` enum field is coarser than DORA expects. *Resolution:* **out of scope** — same rationale. The `alternative` field signals architectural substitutability; cutover plans are contractual.
-- **Replaceability semantics.** Reviewer flagged `flexibility.replaceability: not_applicable` as "philosophically odd — every system has a replaceability story." *Resolution:* open. Possible v0.2 wording change in `SPECIFICATION.md` to constrain when `not_applicable` is appropriate; gathering more authoring feedback first.
-- **Layer terminology clarity.** Reviewer had to infer the `artifact` / `service` / `product` hierarchy without the spec. *Resolution:* open — the layer model itself is sound; the README and authoring guide can do better at signaling the hierarchy at a glance.
+**Resolved in v0.2:**
+
+- ✅ **Data residency of the subject itself** — landed as `intent.tenancy.dataResidency[]`.
+- ✅ **Audit metadata on `industryRefs[]`** — landed as optional `auditor` / `auditPeriod` / `dateAttested` fields.
+- ✅ **SLA / SLO surface** — landed as `envelope.serviceLevels` (service/product layer only).
+- ✅ **ISO 25010 paywall dependency** — closed via `SPECIFICATION.md §10` definitions appendix and §1.5 open companions. SAM is now usable from §10 alone without paywalled ISO access.
+
+**Open / v0.3 candidates:**
+
+- **Architectural style declaration.** Reviewer noted SAM has no slot for "this is event-sourced microservices" — common shorthand vocabulary. *Proposed:* `intent.architecturalStyle` enum.
+- **Pattern catalog.** Canonical patterns from Release It! / DDIA / Fowler PEAA / caching literature aren't nameable in SAM today. *Proposed:* `architecturalPatterns[]` + `registry/patterns.json`.
+- **Storage architecture detail.** `envelope.persistence` is thin; reviewers want replication topology, consistency model, backup posture. *Proposed:* expand `envelope.persistence` for v0.3.
+- **Concurrency-model detail.** `envelope.instantiation.mode` is thin; reviewers want ordering guarantees, idempotency, conflict resolution. *Proposed:* expand `envelope.instantiation` for v0.3.
+
+**Open / no decision yet:**
+
+- **Replaceability semantics.** Reviewer flagged `flexibility.replaceability: not_applicable` as "philosophically odd — every system has a replaceability story." Possible v0.3 wording change in `SPECIFICATION.md §10.8` to constrain when `not_applicable` is appropriate; gathering more authoring feedback first.
+- **Layer terminology clarity.** Reviewer had to infer the `artifact` / `service` / `product` hierarchy without the spec. The model itself is sound; the README and authoring guide can do better at signaling the hierarchy at a glance.
+
+**Explicitly out of scope (carried forward):**
+
+- **Subcontractor / nth-party chain per dependency.** DORA Art. 28 cares about sub-outsourcing. SAM declares architectural facts; tracking each provider's own subcontractor chain is the consumer's compliance register, not the producer's manifest.
+- **Exit / portability strategy per dependency.** Single `alternative` enum field is coarser than DORA expects. The `alternative` field signals architectural substitutability; cutover plans are contractual.
+- **IEEE / ACM as a parallel quality-model anchor.** Investigated. IEEE Std 1061 (Software Quality Metrics Methodology) was withdrawn in 2018; ACM doesn't publish quality-model standards; ISO 25010 has near-monopoly recognition. SAM stays anchored to ISO 25010 names with open CC-BY-4.0 definitions in §10. No need for a "spin #2" in IEEE/ACM.
 
 ## Explicitly out of scope
 

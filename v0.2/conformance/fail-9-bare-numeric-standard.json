@@ -1,0 +1,50 @@
+{
+  "manifestVersion": "0.2",
+  "subject": {
+    "layer": "artifact",
+    "name": "test-subject",
+    "version": "1.0.0",
+    "digest": {
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "intent": {
+    "purpose": "Conformance corpus test fixture.",
+    "audience": "single_user",
+    "tenancy": {
+      "model": "none"
+    }
+  },
+  "envelope": {
+    "throughput": {},
+    "scaling": {
+      "axis": "none"
+    },
+    "instantiation": {
+      "mode": "singleton"
+    },
+    "privilege": {
+      "runtime": "unprivileged"
+    },
+    "network": {
+      "posture": "isolated"
+    }
+  },
+  "qualityAttributes": {
+    "security": {
+      "overall": {
+        "status": "declared",
+        "summary": "Some standard.",
+        "industryRefs": [
+          {
+            "standard": "27001"
+          }
+        ]
+      }
+    }
+  },
+  "producer": {
+    "name": "Test Producer",
+    "issuedAt": "2026-04-26T15:00:00Z"
+  }
+}

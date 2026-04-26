@@ -10,11 +10,11 @@ SBOM tells you what's inside the software. SLSA tells you how it was built. Open
 
 > **Working draft — not adoption-ready.** SAM is a v0 working proposal. Breaking changes are still possible (per `SPECIFICATION.md §6.1`); the stable target is v1. We are publishing this draft to gather technical review and contributors, *not* to declare a finished standard. If you operate SAMs in production today, you are early — please file feedback. **What we're asking for:** technical review of the schema and spec from supply-chain, security, and procurement practitioners; real-world authoring feedback (what's hard, what's missing); citations and registry contributions; implementations of the spec-aware validator surface (§5.1.6, §5.1.7, §5.1.9, §5.1.11). See [CONTRIBUTING.md](CONTRIBUTING.md), [ROADMAP.md](ROADMAP.md), and the [issue templates](https://github.com/software-architecture-spec/software-architecture-spec.github.io/issues/new/choose).
 
-The current (and only) version is **v0.1** — the first public draft. See [`v0.1/SPECIFICATION.md`](v0.1/SPECIFICATION.md). Future versions land alongside (v0.2, v0.3, …) at frozen URIs per `SPECIFICATION.md §6.3`.
+The current version is **v0.2**. See [`v0.2/SPECIFICATION.md`](v0.2/SPECIFICATION.md). v0.1 is frozen and remains valid at its URIs per `SPECIFICATION.md §6.3` (same-MAJOR backward compatibility). Future versions land alongside (v0.3, v0.4, …) at frozen URIs.
 
-> **Normative reference.** The [SPECIFICATION.md](v0.1/SPECIFICATION.md) document is the normative source for what a conforming SAM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–9 are written: Scope, Terminology, Conformance language, Threat model, Definition of a conforming SAM, Versioning, Extensibility, Stability, **SAM Levels (L0–L3)**. Authoring guide, verification guide, and lifecycle policy are deferred.
+> **Normative reference.** The [SPECIFICATION.md](v0.2/SPECIFICATION.md) document is the normative source for what a conforming SAM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–10 are written: Scope, Terminology, Conformance language, Threat model, Definition of a conforming SAM, Versioning, Extensibility, Stability, **SAM Levels (L0–L3)**, and a **Definitions appendix** that reproduces every ISO/IEC 25010:2023 characteristic and sub-characteristic in CC-BY-4.0 wording so SAM is fully usable without ISO access. Authoring guide, verification guide, and lifecycle policy are deferred.
 
-> **Note on the namespace.** The schema's `$id` (`https://software-architecture-spec.github.io/sam/v0.1/schema.json`) is hosted on GitHub Pages. For SAM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group). The current host is appropriate for a working draft; URIs will redirect when the namespace moves.
+> **Note on the namespace.** The schema's `$id` (`https://software-architecture-spec.github.io/sam/v0.2/schema.json`) is hosted on GitHub Pages. For SAM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group). The current host is appropriate for a working draft; URIs will redirect when the namespace moves.
 
 ---
 
@@ -38,7 +38,7 @@ SAM restores that signal. A manifest that honestly declares `audience: single_us
 - A **legal contract** or **service-level agreement**. SAM carries no automatic legal weight; a separate contract may incorporate SAM claims by reference.
 - A **substitute for testing or due diligence**. Evidence URIs reference verification artifacts; reading a SAM does not relieve the consumer of evaluating the producer's claims against their own risk tolerance.
 
-The full normative scope is in [`SPECIFICATION.md §1`](v0.1/SPECIFICATION.md).
+The full normative scope is in [`SPECIFICATION.md §1`](v0.2/SPECIFICATION.md).
 
 ---
 
@@ -71,7 +71,7 @@ Levels are about *evaluability*, not *quality*. An L3 manifest declaring "P95 la
 
 ```
 manifest
-├── manifestVersion          schema version (v0.1)
+├── manifestVersion          schema version (v0.2)
 ├── subject                  what this manifest describes
 │   ├── layer                artifact | service | product (granularity declaration)
 │   ├── name, version
@@ -79,6 +79,7 @@ manifest
 │   ├── sbomRef              optional pointer to SBOM
 │   └── components[]         lower-layer subjects (for service/product manifests)
 ├── intent                   purpose, audience, tenancy, out-of-scope
+│   └── tenancy              model + isolationGuarantees + dataResidency[] (new in v0.2)
 ├── envelope                 operational design target (the "what was it built for")
 │   ├── throughput           target/max RPS, latency SLOs, concurrency
 │   ├── scaling              axis (horizontal/vertical/none), statefulness
@@ -86,14 +87,18 @@ manifest
 │   ├── privilege            root_required / unprivileged / capability_scoped
 │   ├── network              isolated / egress_only / ingress_only / bidirectional
 │   ├── dependencies[]       third-party ICT services this software runs against (DORA / NIS2 / 27036 / 800-161)
+│   ├── serviceLevels        SLA / SLO bucket — service/product layer only (new in v0.2)
 │   └── persistence          required stores
 ├── qualityAttributes        ISO/IEC 25010:2023 — 9 characteristics + sub-characteristics
+│                            (defined in our own words at SPECIFICATION.md §10)
 ├── extensions               quality concerns ISO 25010 doesn't cover cleanly
 │   ├── observability        (folds awkwardly under maintainability.analysability)
 │   ├── dataLifecycle        retention, deletion, archival
 │   └── internationalization
 ├── tensionsDeclared         which side of CAP/observability-cost/etc. did you pick?
 └── producer                 issuer + contact + issuedAt + validFor
+
+industryRefs[] entries gain optional auditor / auditPeriod / dateAttested in v0.2.
 
 x-* extension keys are permitted on:
   qualityAttributeClaim, qualityAttributes characteristic objects,
@@ -177,15 +182,19 @@ This means cosign, sigstore, and any in-toto-aware tooling can sign and verify S
 
 ## Files
 
-### Versioned (`v0.1/` — current)
+### Versioned (`v0.2/` — current)
 
-- [`v0.1/SPECIFICATION.md`](v0.1/SPECIFICATION.md) — the normative specification (§§1–9)
-- [`v0.1/schema.json`](v0.1/schema.json) — the JSON Schema (Draft 2020-12)
-- [`v0.1/examples/saas.manifest.json`](v0.1/examples/saas.manifest.json) — multi-tenant SaaS API (public-cloud shape)
-- [`v0.1/examples/internal-enterprise.manifest.json`](v0.1/examples/internal-enterprise.manifest.json) — internal employee-onboarding portal (corporate-internal shape: SSO, no public exposure, regulatory retention, WCAG 2.2 AA)
-- [`v0.1/conformance/`](v0.1/conformance/) — test corpus indexed by `manifest.json`; 8 positive cases, 12 negative cases, README with run instructions.
+- [`v0.2/SPECIFICATION.md`](v0.2/SPECIFICATION.md) — the normative specification (§§1–10, including the new Definitions appendix)
+- [`v0.2/schema.json`](v0.2/schema.json) — the JSON Schema (Draft 2020-12) with `envelope.serviceLevels`, `intent.tenancy.dataResidency[]`, and enriched `industryRefs[]` fields
+- [`v0.2/examples/saas.manifest.json`](v0.2/examples/saas.manifest.json) — multi-tenant SaaS API (public-cloud shape)
+- [`v0.2/examples/internal-enterprise.manifest.json`](v0.2/examples/internal-enterprise.manifest.json) — internal employee-onboarding portal (corporate-internal shape: SSO, no public exposure, regulatory retention, WCAG 2.2 AA)
+- [`v0.2/conformance/`](v0.2/conformance/) — test corpus indexed by `manifest.json`; positive and negative cases per `§5.1` plus four new cases for v0.2 features.
 
-Future versions land alongside (`v0.2/`, `v0.3/`, …) and don't disturb published v0.1 URIs.
+### Frozen prior versions
+
+- [`v0.1/`](v0.1/) — first public draft. Byte-identical and resolving at its URIs per `§6.3` same-MAJOR backward compatibility.
+
+Future versions land alongside (`v0.3/`, `v0.4/`, …) and don't disturb published URIs.
 
 ### Companion registries (`registry/` — versioned independently)
 
@@ -215,16 +224,16 @@ The validator (`tools/validate.py`) is the canonical entry point. It runs in:
 For ad-hoc validation of a single example without the full corpus:
 
 ```sh
-check-jsonschema --schemafile v0.1/schema.json v0.1/examples/saas.manifest.json
+check-jsonschema --schemafile v0.2/schema.json v0.2/examples/saas.manifest.json
 ```
 
 ---
 
 ## Status
 
-v0.1 — first public draft. Breaking changes still possible while `MAJOR` is `0` (per `SPECIFICATION.md §6.1`). The goal of v0 is to get the field set right, not to lock the format.
+v0.2 — current. Breaking changes still possible while `MAJOR` is `0` (per `SPECIFICATION.md §6.1`). The goal of v0 is to get the field set right, not to lock the format. v0.2 is additive over v0.1; v0.1 manifests remain conforming under their own URIs.
 
-### v0.1 conventions
+### v0.2 conventions
 
 - **`x-*` extensions permitted** on `qualityAttributeClaim`, `qualityAttributes` characteristic objects, `tensionsDeclared[]` items, `industryRefs[]` items, `evidence[]` items, `producer`, and `subject.components[]` items. Forbidden on the top-level manifest, `subject` root, `manifestVersion`, `intent` (and `tenancy`), `qualityAttributes` parent, and all of `envelope`'s sub-blocks. See `SPECIFICATION.md §7`.
 - **Stability annotations** on every field's `description` (`Stability: stable | experimental`) plus an `x-sam-stability` keyword on stable fields. See `SPECIFICATION.md §8`.
@@ -240,7 +249,7 @@ v0.1 — first public draft. Breaking changes still possible while `MAJOR` is `0
 - Whether to add a `lifecycle` section (active, maintenance, deprecated, abandoned) or leave that to package metadata.
 - Subject-aware DSSE binding for non-artifact layers — service- and product-layer manifests have optional `subject.digest`; binding them to a subject identifier without a digest is currently underspecified.
 
-### Planned beyond v0.1
+### Planned beyond v0.2
 
 - **Authoring guide** — practical guidance for producers on what to populate per attribute and how to write honest summaries.
 - **Verification guide** — practical guidance for consumers on how to evaluate a SAM in different decision contexts.

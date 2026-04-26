@@ -1,0 +1,45 @@
+{
+  "manifestVersion": "0.2",
+  "subject": {
+    "layer": "service",
+    "name": "test-service",
+    "version": "2.0.0",
+    "components": [
+      {
+        "layer": "artifact",
+        "name": "test-service-api",
+        "version": "2.0.0",
+        "digest": {
+          "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      }
+    ]
+  },
+  "intent": {
+    "purpose": "Conformance corpus test fixture.",
+    "audience": "single_user",
+    "tenancy": {
+      "model": "none"
+    }
+  },
+  "envelope": {
+    "throughput": {},
+    "scaling": {
+      "axis": "none"
+    },
+    "instantiation": {
+      "mode": "singleton"
+    },
+    "privilege": {
+      "runtime": "unprivileged"
+    },
+    "network": {
+      "posture": "isolated"
+    }
+  },
+  "qualityAttributes": {},
+  "producer": {
+    "name": "Test Producer",
+    "issuedAt": "2026-04-26T15:00:00Z"
+  }
+}

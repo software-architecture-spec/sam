@@ -1,0 +1,255 @@
+{
+  "schemaVersion": "0.2",
+  "schema": "../schema.json",
+  "cases": [
+    {
+      "id": "pass-minimal-artifact",
+      "file": "pass-minimal-artifact.json",
+      "expected": "valid",
+      "covers": [
+        "5.1.1",
+        "5.1.2",
+        "5.1.5",
+        "5.1.8",
+        "5.1.10"
+      ],
+      "enforcedBy": "schema",
+      "notes": "Smallest conforming artifact-layer manifest."
+    },
+    {
+      "id": "pass-service-with-components",
+      "file": "pass-service-with-components.json",
+      "expected": "valid",
+      "covers": [
+        "5.1.2"
+      ],
+      "enforcedBy": "schema",
+      "notes": "Service-layer manifest with one artifact component; digest required on the component since component layer is artifact."
+    },
+    {
+      "id": "pass-product-with-nested",
+      "file": "pass-product-with-nested.json",
+      "expected": "valid",
+      "covers": [
+        "5.1.2"
+      ],
+      "enforcedBy": "schema",
+      "notes": "Product-layer manifest with a service component referenced via manifestUri."
+    },
+    {
+      "id": "pass-verified-with-evidence",
+      "file": "pass-verified-with-evidence.json",
+      "expected": "valid",
+      "covers": [
+        "5.1.6"
+      ],
+      "enforcedBy": "schema-and-spec",
+      "notes": "Verified claim carries evidence URI per \u00a75.1.6."
+    },
+    {
+      "id": "pass-declared-with-summary",
+      "file": "pass-declared-with-summary.json",
+      "expected": "valid",
+      "covers": [
+        "5.1.7"
+      ],
+      "enforcedBy": "schema-and-spec",
+      "notes": "Declared claim carries summary per \u00a75.1.7."
+    },
+    {
+      "id": "pass-with-x-extension",
+      "file": "pass-with-x-extension.json",
+      "expected": "valid",
+      "covers": [
+        "5.1.12",
+        "\u00a77"
+      ],
+      "enforcedBy": "schema",
+      "notes": "x-* keys at permitted locations (producer, qualityAttributeClaim) \u2014 schema accepts."
+    },
+    {
+      "id": "pass-strict-tensions",
+      "file": "pass-strict-tensions.json",
+      "expected": "valid",
+      "covers": [
+        "5.1.11"
+      ],
+      "enforcedBy": "spec, strict",
+      "notes": "Uses cap_pacelc, a well-known tension ID per \u00a75.1.11."
+    },
+    {
+      "id": "pass-strict-validfor",
+      "file": "pass-strict-validfor.json",
+      "expected": "valid",
+      "covers": [
+        "5.1.13"
+      ],
+      "enforcedBy": "spec, strict",
+      "notes": "producer.validFor present (strict-conformance prerequisite)."
+    },
+    {
+      "id": "fail-1-malformed-json",
+      "file": "fail-1-malformed-json.json",
+      "expected": "invalid",
+      "covers": [
+        "5.1.1"
+      ],
+      "enforcedBy": "parser",
+      "notes": "Trailing commas \u2014 parsing fails before schema validation."
+    },
+    {
+      "id": "fail-2a-missing-required-subject",
+      "file": "fail-2a-missing-required-subject.json",
+      "expected": "invalid",
+      "covers": [
+        "5.1.2"
+      ],
+      "enforcedBy": "schema",
+      "notes": "Top-level 'subject' is required."
+    },
+    {
+      "id": "fail-2b-bad-enum-audience",
+      "file": "fail-2b-bad-enum-audience.json",
+      "expected": "invalid",
+      "covers": [
+        "5.1.2"
+      ],
+      "enforcedBy": "schema",
+      "notes": "intent.audience must be a defined enum value."
+    },
+    {
+      "id": "fail-5-artifact-without-digest",
+      "file": "fail-5-artifact-without-digest.json",
+      "expected": "invalid",
+      "covers": [
+        "5.1.5"
+      ],
+      "enforcedBy": "schema",
+      "notes": "When subject.layer is artifact, subject.digest is required (if/then in schema)."
+    },
+    {
+      "id": "fail-6-verified-without-evidence",
+      "file": "fail-6-verified-without-evidence.json",
+      "expected": "schema-valid-but-spec-nonconforming",
+      "covers": [
+        "5.1.6"
+      ],
+      "enforcedBy": "spec",
+      "notes": "Schema accepts; SAM-aware validators MUST report \u00a75.1.6 violation."
+    },
+    {
+      "id": "fail-7-declared-without-summary",
+      "file": "fail-7-declared-without-summary.json",
+      "expected": "schema-valid-but-spec-nonconforming",
+      "covers": [
+        "5.1.7"
+      ],
+      "enforcedBy": "spec",
+      "notes": "Schema accepts; SAM-aware validators MUST report \u00a75.1.7 violation."
+    },
+    {
+      "id": "fail-8-bad-uri",
+      "file": "fail-8-bad-uri.json",
+      "expected": "format-dependent",
+      "covers": [
+        "5.1.8"
+      ],
+      "enforcedBy": "schema-format-aware",
+      "notes": "format: uri rejects 'not a uri' (when validator is configured to enforce format). JSON Schema 2020-12 makes 'format' annotation-by-default; rejection requires a validator with format assertion (e.g., rfc3987 for URI, rfc3339-validator for date-time installed alongside jsonschema)."
+    },
+    {
+      "id": "fail-9-bare-numeric-standard",
+      "file": "fail-9-bare-numeric-standard.json",
+      "expected": "schema-valid-but-spec-nonconforming",
+      "covers": [
+        "5.1.9"
+      ],
+      "enforcedBy": "spec",
+      "notes": "Schema accepts free-text 'standard'; SAM-aware validator SHOULD reject bare-numeric strings."
+    },
+    {
+      "id": "fail-10-bad-timestamp",
+      "file": "fail-10-bad-timestamp.json",
+      "expected": "format-dependent",
+      "covers": [
+        "5.1.10"
+      ],
+      "enforcedBy": "schema-format-aware",
+      "notes": "format: date-time rejects 'yesterday' (when validator is configured to enforce format). JSON Schema 2020-12 makes 'format' annotation-by-default; rejection requires a validator with format assertion (e.g., rfc3987 for URI, rfc3339-validator for date-time installed alongside jsonschema)."
+    },
+    {
+      "id": "fail-11-unknown-tension",
+      "file": "fail-11-unknown-tension.json",
+      "expected": "schema-valid-but-spec-nonconforming",
+      "covers": [
+        "5.1.11"
+      ],
+      "enforcedBy": "spec, strict",
+      "notes": "Schema accepts free-text tension; strict conformance requires a well-known ID or x: prefix."
+    },
+    {
+      "id": "fail-12a-unknown-key-on-envelope",
+      "file": "fail-12a-unknown-key-on-envelope.json",
+      "expected": "invalid",
+      "covers": [
+        "5.1.12",
+        "\u00a77.2"
+      ],
+      "enforcedBy": "schema",
+      "notes": "envelope is a forbidden object \u2014 additionalProperties: false rejects 'customField'."
+    },
+    {
+      "id": "fail-12b-non-x-prefix-key",
+      "file": "fail-12b-non-x-prefix-key.json",
+      "expected": "invalid",
+      "covers": [
+        "5.1.12",
+        "\u00a77.1"
+      ],
+      "enforcedBy": "schema",
+      "notes": "producer permits x-* but rejects keys without the x- prefix (additionalProperties: false applies to non-x-* keys)."
+    },
+    {
+      "id": "pass-with-data-residency",
+      "file": "pass-with-data-residency.json",
+      "expected": "valid",
+      "covers": [
+        "\u00a72 dataResidency"
+      ],
+      "enforcedBy": "schema",
+      "notes": "intent.tenancy.dataResidency populated with ISO 3166 region grouping."
+    },
+    {
+      "id": "pass-with-audit-metadata",
+      "file": "pass-with-audit-metadata.json",
+      "expected": "valid",
+      "covers": [
+        "\u00a75.1.9",
+        "\u00a710"
+      ],
+      "enforcedBy": "schema",
+      "notes": "industryRefs entry with auditor / auditPeriod / dateAttested."
+    },
+    {
+      "id": "pass-with-service-levels",
+      "file": "pass-with-service-levels.json",
+      "expected": "valid",
+      "covers": [
+        "envelope.serviceLevels"
+      ],
+      "enforcedBy": "schema",
+      "notes": "service-layer manifest populates envelope.serviceLevels (allowed at service/product layer)."
+    },
+    {
+      "id": "fail-13-servicelevels-on-artifact",
+      "file": "fail-13-servicelevels-on-artifact.json",
+      "expected": "invalid",
+      "covers": [
+        "envelope.serviceLevels",
+        "subject.layer"
+      ],
+      "enforcedBy": "schema",
+      "notes": "envelope.serviceLevels is forbidden when subject.layer=artifact (if/then in schema)."
+    }
+  ]
+}
