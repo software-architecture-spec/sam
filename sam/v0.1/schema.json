@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://quality-software.dev/schemas/design-intent-manifest/v0.json",
-  "title": "Design Intent Manifest",
-  "description": "Producer-signed declaration of what a software artifact was designed to do and the operational envelope it was designed for. Companion to SBOM (what's inside) and SLSA (how it was built). Predicate-only: signing happens via DSSE/sigstore wrapping this document.",
+  "$id": "https://software-architecture-spec.github.io/sam/v0.1/schema.json",
+  "title": "Software Architecture Manifest",
+  "description": "Producer-signed declaration of a software artifact's intended properties — its purpose, operational envelope, and quality attributes — for consumption by humans, AI agents, and automated tooling. Companion to SBOM (contents) and SLSA (build provenance); SAM declares what the software was designed to be. Predicate-only: signing happens via DSSE/sigstore wrapping this document.",
   "type": "object",
   "required": ["manifestVersion", "subject", "intent", "envelope", "qualityAttributes", "producer"],
   "additionalProperties": false,
@@ -39,7 +39,7 @@
         },
         "components": {
           "type": "array",
-          "description": "For service-layer or product-layer manifests: the constituent lower-layer subjects, each referencing its own DIM. Composition is explicit; no implicit nesting.",
+          "description": "For service-layer or product-layer manifests: the constituent lower-layer subjects, each referencing its own SAM. Composition is explicit; no implicit nesting.",
           "items": {
             "type": "object",
             "required": ["layer", "name", "version"],
@@ -59,7 +59,7 @@
               "manifestUri": {
                 "type": "string",
                 "format": "uri",
-                "description": "URI to the constituent's signed DIM, if available."
+                "description": "URI to the constituent's signed SAM, if available."
               }
             }
           }

@@ -1,16 +1,16 @@
-# Design Intent Manifest (DIM)
+# Software Architecture Manifest (SAM)
 
 A producer-signed, machine-readable declaration of what a software artifact was designed to do and the operational envelope it was designed for.
 
-SBOM tells you what's inside the artifact. SLSA tells you how it was built. OpenSSF Scorecard tells you whether good practices were followed. **DIM tells you what the producer designed it to be.**
+SBOM tells you what's inside the artifact. SLSA tells you how it was built. OpenSSF Scorecard tells you whether good practices were followed. **SAM tells you what the producer designed it to be.**
 
 > A nutrition label for architecture, signed by the maintainer, shipped on every artifact.
 
 This is the v0 schema.
 
-> **Normative reference.** The [SPECIFICATION.md](SPECIFICATION.md) document is the normative source for what a conforming DIM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–8 of the specification (Scope, Terminology, Conformance language, Threat model, Definition of a conforming DIM, Versioning, Extensibility, Stability) are written. DIM levels (L0–L3), authoring guide, verification guide, and lifecycle policy are deferred.
+> **Normative reference.** The [SPECIFICATION.md](sam/v0.1/SPECIFICATION.md) document is the normative source for what a conforming SAM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–8 of the specification (Scope, Terminology, Conformance language, Threat model, Definition of a conforming SAM, Versioning, Extensibility, Stability) are written. SAM levels (L0–L3), authoring guide, verification guide, and lifecycle policy are deferred.
 
-> **Note on the namespace.** The schema's `$id` (`https://quality-software.dev/...`) is a placeholder. For DIM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group), not a personal domain. Treat the current `$id` as draft.
+> **Note on the namespace.** The schema's `$id` (`https://software-architecture-spec.github.io/sam/v0.1/schema.json`) is hosted on GitHub Pages under the `software-architecture-spec` org. For SAM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group). The current host is appropriate for a working draft; URIs will redirect when the namespace moves.
 
 ---
 
@@ -18,21 +18,21 @@ This is the v0 schema.
 
 In the AI era, a vibe-coded weekend prototype and a hardened production service are visually indistinguishable: same React frontend, same Postgres, same Dockerfile, same deployment pipeline. The Access database on a shared drive used to advertise its own fragility. The modern equivalent does not.
 
-DIM restores that signal. A manifest that honestly declares `audience: single_user`, `scaling: none`, `observability: unspecified`, `tenancy: none` *is* the modern `.mdb` file announcing what it is — without the ambiguity of inference from stack choices.
+SAM restores that signal. A manifest that honestly declares `audience: single_user`, `scaling: none`, `observability: unspecified`, `tenancy: none` *is* the modern `.mdb` file announcing what it is — without the ambiguity of inference from stack choices.
 
 ---
 
 ## Layers — what a manifest describes
 
-The same questions ("how does it scale", "what privilege does it run with", "is it multi-tenant") get different answers at three different layers, read by three different audiences. A DIM declares its layer explicitly via `subject.layer`:
+The same questions ("how does it scale", "what privilege does it run with", "is it multi-tenant") get different answers at three different layers, read by three different audiences. A SAM declares its layer explicitly via `subject.layer`:
 
 | Layer | Granularity | Audience | Notes |
 |---|---|---|---|
 | `artifact` | one container image, binary, or package | AI agents, build/SLSA, SBOM tooling | The signing granularity. `digest` is required. Matches in-toto subject convention. |
-| `service` | a logical SLO-owning unit (1+ artifacts) | SRE, on-call, ops | Where SLOs and incident response actually live. `digest` optional; uses `components[]` to point at constituent artifact DIMs. |
-| `product` | the contractual / customer-facing surface | Procurement, audit, customers | What gets sold. `components[]` points at constituent service DIMs. |
+| `service` | a logical SLO-owning unit (1+ artifacts) | SRE, on-call, ops | Where SLOs and incident response actually live. `digest` optional; uses `components[]` to point at constituent artifact SAMs. |
+| `product` | the contractual / customer-facing surface | Procurement, audit, customers | What gets sold. `components[]` points at constituent service SAMs. |
 
-A small project may only need one DIM at the `artifact` layer. A real product typically has all three, with each layer's manifest referencing its constituents via `subject.components[]`. Composition is explicit; nothing is inferred.
+A small project may only need one SAM at the `artifact` layer. A real product typically has all three, with each layer's manifest referencing its constituents via `subject.components[]`. Composition is explicit; nothing is inferred.
 
 ## Structure
 
@@ -78,7 +78,7 @@ This three-track model (declared / verified / unspecified) mirrors how SBOM stan
 
 ## Standards alignment
 
-DIM uses two reference layers per claim:
+SAM uses two reference layers per claim:
 
 - **`industryRefs[]`** — *normative*. Industry-standard anchors that auditors and procurement teams recognize. First-class on the manifest because they outlive any single host or vendor.
 - **`informationalRefs[]`** — *non-normative*. https URIs to design-context resources (pattern catalogs, internal docs, knowledge bases) that aided the producer's reasoning. Useful for AI agents and humans who want to drill into rationale; not anchors an auditor relies on.
@@ -88,7 +88,7 @@ DIM uses two reference layers per claim:
 | Layer | Standard | Where it lives |
 |---|---|---|
 | Software supply chain (contents) | SBOM (CycloneDX / SPDX) | `subject.sbomRef` |
-| Build provenance | SLSA / in-toto | external attestation; DIM is a sibling predicate |
+| Build provenance | SLSA / in-toto | external attestation; SAM is a sibling predicate |
 | Quality model spine | **ISO/IEC 25010:2023** | `qualityAttributes` keys = the 9 characteristics |
 
 ### Per-section industry anchors (use as `industryRefs[]`)
@@ -126,26 +126,27 @@ The manifest is a **predicate** — the statement of intent. Signing wraps it in
 {
   "_type": "https://in-toto.io/Statement/v1",
   "subject": [{ "name": "metrics-dashboard-api", "digest": { "sha256": "..." } }],
-  "predicateType": "https://quality-software.dev/dim/v0.1",
+  "predicateType": "https://software-architecture-spec.github.io/sam/v0.1",
   "predicate": { ...the manifest body... }
 }
 ```
 
-This means cosign, sigstore, and any in-toto-aware tooling can sign and verify DIMs without inventing a new key system. Bind the manifest to the artifact via `subject.digest`.
+This means cosign, sigstore, and any in-toto-aware tooling can sign and verify SAMs without inventing a new key system. Bind the manifest to the artifact via `subject.digest`.
 
 ---
 
 ## Files
 
-- `schema/design-intent-manifest.v0.schema.json` — the JSON Schema (Draft 2020-12)
-- `examples/example.manifest.json` — multi-tenant SaaS API (the public-cloud shape)
-- `examples/internal-enterprise.manifest.json` — internal employee-onboarding portal (the corporate-internal shape: SSO, no public exposure, regulatory retention, WCAG 2.2 AA)
+- `sam/v0.1/SPECIFICATION.md` — the normative specification
+- `sam/v0.1/schema.json` — the JSON Schema (Draft 2020-12)
+- `sam/v0.1/examples/saas.manifest.json` — multi-tenant SaaS API (public-cloud shape)
+- `sam/v0.1/examples/internal-enterprise.manifest.json` — internal employee-onboarding portal (corporate-internal shape: SSO, no public exposure, regulatory retention, WCAG 2.2 AA)
 
 Validate with any JSON Schema validator (e.g., `ajv`, `check-jsonschema`):
 
 ```sh
-check-jsonschema --schemafile schema/design-intent-manifest.v0.schema.json examples/example.manifest.json
-check-jsonschema --schemafile schema/design-intent-manifest.v0.schema.json examples/internal-enterprise.manifest.json
+check-jsonschema --schemafile sam/v0.1/schema.json sam/v0.1/examples/saas.manifest.json
+check-jsonschema --schemafile sam/v0.1/schema.json sam/v0.1/examples/internal-enterprise.manifest.json
 ```
 
 ---
@@ -171,10 +172,21 @@ v0.1 — draft. Breaking changes expected. The goal of v0 is to get the field se
 
 ### Planned for v0.2 / next sessions
 
-- **Narrative continuation** — DIM levels (L0 = no manifest, L1 = declared-only, L2 = with `industryRefs`, L3 = verified with evidence), authoring guide, verification guide, lifecycle policy. (§§1–8 written in [SPECIFICATION.md](SPECIFICATION.md): scope, terminology, conformance language, threat model, conforming-DIM definition, versioning, extensibility, stability.)
+- **Narrative continuation** — SAM levels (L0 = no manifest, L1 = declared-only, L2 = with `industryRefs`, L3 = verified with evidence), authoring guide, verification guide, lifecycle policy. (§§1–8 written in [SPECIFICATION.md](sam/v0.1/SPECIFICATION.md): scope, terminology, conformance language, threat model, conforming-SAM definition, versioning, extensibility, stability.)
 - **Schema implementation of §7 (extensibility).** Add `patternProperties: { "^x-": {} }` to the objects §7.2 permits (`qualityAttributeClaim`, `qualityAttributes` characteristic objects, `extensions` entries, `tensionsDeclared[]`, `industryRefs[]`, `evidence[]`, `producer`, `subject.components[]`). Policy is normative now; schema implementation lands in v0.2.
-- **Schema implementation of §8 (stability).** Annotate each field's `description` with its stability tier; introduce an `x-dim-stability` structured keyword for tooling.
+- **Schema implementation of §8 (stability).** Annotate each field's `description` with its stability tier; introduce an `x-sam-stability` structured keyword for tooling.
 - **Canonical-strings registry** for `industryRefs.standard` to reduce citation drift (SPDX License List pattern).
 - **Tension identifier registry** for `tensionsDeclared[].tension` well-known IDs (referenced by §5.1.11).
 - **Conformance test suite** — a corpus of known-good and known-bad manifests with expected validator outputs, with positive and negative cases for each conformance item in §5.1.
 - **Anchor-gap closures** flagged by the citations audit: `extensions.contextWindowManagement` → OWASP LLM Top 10 / NIST AI RMF; `envelope.privilege` + `envelope.network` → CIS Benchmarks / NIST SP 800-190; `extensions.dataLifecycle` deletion side → NIST SP 800-88 Rev. 1.
+
+---
+
+## License
+
+This project is dual-licensed.
+
+- **Code, schema, and examples** (`sam/v0.1/schema.json`, `sam/v0.1/examples/*`, future tooling) are licensed under [Apache-2.0](LICENSE). Apache-2.0 is preferred over MIT here because it includes an explicit patent grant — important for a standard with potential patent surface around signing and verification flows.
+- **Specification text and other prose** (`README.md`, `sam/v0.1/SPECIFICATION.md`) are licensed under [Creative Commons Attribution 4.0 International (CC-BY-4.0)](LICENSE-DOCS). This follows the convention used by SLSA and SPDX (newer versions) for normative spec text: derivative documents are permitted with attribution.
+
+The intent of this repository is broad reuse with attribution.
