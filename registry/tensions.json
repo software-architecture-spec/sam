@@ -1,0 +1,47 @@
+{
+  "registry": "sam-tensions",
+  "version": "0.1",
+  "description": "Well-known identifiers for tensionsDeclared[].tension. Producers SHOULD use one of these IDs when the named tension applies. For domain-specific tensions not in this registry, use the 'x:' prefix per SPECIFICATION.md §5.1.11.",
+  "entries": [
+    {
+      "id": "cap_pacelc",
+      "name": "CAP / PACELC",
+      "summary": "Strong consistency, high availability, and low latency cannot coexist. During a partition, consistency and availability are a binary fork. Even without partitions, consistency and latency are coupled — synchronous replication adds real milliseconds.",
+      "cite": "Brewer 2000 (CAP); Abadi 2012 (PACELC).",
+      "uri": "https://en.wikipedia.org/wiki/PACELC_design_principle",
+      "applies_to": ["data-integrity", "reliability", "performance"]
+    },
+    {
+      "id": "observability_cost_trilemma",
+      "name": "Observability cost trilemma",
+      "summary": "Full-resolution observability at full scale costs more than the application infrastructure. Resolution, cost, and real-time freshness form a three-body problem — you must sample, delay, or pay.",
+      "cite": "Industry folklore; surfaced by Honeycomb, Grafana, Datadog operational writeups.",
+      "uri": "",
+      "applies_to": ["observability", "scalability"]
+    },
+    {
+      "id": "test_suite_tension",
+      "name": "Test suite coverage vs. maintainability",
+      "summary": "High-coverage tests tightly coupled to implementation create a codebase that cannot evolve. 95% coverage with brittle tests is worse than 70% coverage with behavioral tests.",
+      "cite": "Fowler test pyramid; Beck test-first principles.",
+      "uri": "https://martinfowler.com/articles/practical-test-pyramid.html",
+      "applies_to": ["testability", "maintainability"]
+    },
+    {
+      "id": "observability_pii",
+      "name": "Diagnosability vs. PII exposure",
+      "summary": "Rich structured logs with context-specific fields improve diagnosability but can leak PII into log aggregators with weaker access controls than the primary database.",
+      "cite": "GDPR Article 5(1)(c) data minimization; OWASP Logging Cheat Sheet.",
+      "uri": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+      "applies_to": ["observability", "security"]
+    },
+    {
+      "id": "security_performance_isolation",
+      "name": "Security boundary enforcement vs. latency",
+      "summary": "Sandboxing, input validation, mTLS, and least-privilege enforcement cost real compute. Latency targets must account for security boundary overhead.",
+      "cite": "NIST SP 800-190; Google BeyondProd whitepaper.",
+      "uri": "https://cloud.google.com/docs/security/beyondprod",
+      "applies_to": ["security", "performance"]
+    }
+  ]
+}

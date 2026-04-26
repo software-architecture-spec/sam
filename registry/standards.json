@@ -1,0 +1,139 @@
+{
+  "registry": "sam-standards",
+  "version": "0.1",
+  "description": "Canonical spellings of common industryRefs.standard values used across SAM manifests. Advisory only; not enforced by the schema. Producers SHOULD use the canonical spelling. Consumers MAY normalize aliases to canonical when analyzing across many manifests. Open for community contribution.",
+  "entries": [
+    {
+      "canonical": "ISO/IEC 25010",
+      "aliases": ["ISO 25010", "ISO/IEC 25010:2023", "ISO25010"],
+      "uri": "https://iso25000.com/index.php/en/iso-25000-standards/iso-25010",
+      "domain": "quality-model"
+    },
+    {
+      "canonical": "ISO/IEC 25012",
+      "aliases": ["ISO 25012", "ISO/IEC 25012:2008"],
+      "uri": "https://www.iso.org/standard/35736.html",
+      "domain": "data-quality"
+    },
+    {
+      "canonical": "ISO/IEC 27001",
+      "aliases": ["ISO 27001", "ISO27001", "ISO/IEC 27001:2022"],
+      "uri": "https://www.iso.org/standard/27001",
+      "domain": "security"
+    },
+    {
+      "canonical": "ISO/IEC 27036",
+      "aliases": ["ISO 27036", "ISO/IEC 27036:2014"],
+      "uri": "https://www.iso.org/standard/59648.html",
+      "domain": "supplier-security"
+    },
+    {
+      "canonical": "NIST SP 800-218",
+      "aliases": ["SSDF", "NIST SSDF", "SP 800-218"],
+      "uri": "https://csrc.nist.gov/Projects/ssdf",
+      "domain": "secure-development"
+    },
+    {
+      "canonical": "NIST SP 800-53",
+      "aliases": ["SP 800-53"],
+      "uri": "https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final",
+      "domain": "security-controls"
+    },
+    {
+      "canonical": "NIST SP 800-161",
+      "aliases": ["SP 800-161", "NIST C-SCRM"],
+      "uri": "https://csrc.nist.gov/pubs/sp/800/161/r1/final",
+      "domain": "supply-chain-risk"
+    },
+    {
+      "canonical": "NIST SP 800-190",
+      "aliases": ["SP 800-190", "NIST Container Security Guide"],
+      "uri": "https://csrc.nist.gov/pubs/sp/800/190/final",
+      "domain": "container-security"
+    },
+    {
+      "canonical": "NIST SP 800-88 Rev. 1",
+      "aliases": ["NIST 800-88", "SP 800-88", "Media Sanitization Guide"],
+      "uri": "https://csrc.nist.gov/pubs/sp/800/88/r1/final",
+      "domain": "data-sanitization"
+    },
+    {
+      "canonical": "OWASP ASVS",
+      "aliases": ["ASVS", "Application Security Verification Standard"],
+      "uri": "https://owasp.org/www-project-application-security-verification-standard/",
+      "domain": "application-security"
+    },
+    {
+      "canonical": "WCAG",
+      "aliases": ["WCAG 2.2", "WCAG 2.1", "Web Content Accessibility Guidelines"],
+      "uri": "https://www.w3.org/TR/WCAG22/",
+      "domain": "accessibility"
+    },
+    {
+      "canonical": "OpenTelemetry",
+      "aliases": ["OTel", "OpenTelemetry semantic conventions"],
+      "uri": "https://opentelemetry.io/docs/specs/",
+      "domain": "observability"
+    },
+    {
+      "canonical": "OpenAPI",
+      "aliases": ["OAS", "OpenAPI 3.x"],
+      "uri": "https://spec.openapis.org/",
+      "domain": "api-contracts"
+    },
+    {
+      "canonical": "CIS Benchmarks",
+      "aliases": ["CIS", "Center for Internet Security Benchmarks"],
+      "uri": "https://www.cisecurity.org/cis-benchmarks",
+      "domain": "hardening"
+    },
+    {
+      "canonical": "GDPR",
+      "aliases": ["EU GDPR", "Regulation (EU) 2016/679"],
+      "uri": "https://gdpr-info.eu/",
+      "domain": "data-protection"
+    },
+    {
+      "canonical": "EU DORA",
+      "aliases": ["DORA", "Regulation (EU) 2022/2554", "Digital Operational Resilience Act"],
+      "uri": "https://eur-lex.europa.eu/eli/reg/2022/2554/oj",
+      "domain": "operational-resilience"
+    },
+    {
+      "canonical": "NIS2",
+      "aliases": ["NIS 2", "Directive (EU) 2022/2555"],
+      "uri": "https://eur-lex.europa.eu/eli/dir/2022/2555/oj",
+      "domain": "operational-resilience"
+    },
+    {
+      "canonical": "SOC 2",
+      "aliases": ["SOC2", "AICPA SOC 2"],
+      "uri": "https://www.aicpa-cima.com/topic/audit-assurance/audit-and-assurance-greater-than-soc-2",
+      "domain": "audit"
+    },
+    {
+      "canonical": "SLSA",
+      "aliases": ["Supply-chain Levels for Software Artifacts"],
+      "uri": "https://slsa.dev/spec/v1.0/",
+      "domain": "build-provenance"
+    },
+    {
+      "canonical": "SAML",
+      "aliases": ["SAML 2.0"],
+      "uri": "https://docs.oasis-open.org/security/saml/v2.0/",
+      "domain": "identity"
+    },
+    {
+      "canonical": "SCIM",
+      "aliases": ["SCIM 2.0", "RFC 7644"],
+      "uri": "https://datatracker.ietf.org/doc/html/rfc7644",
+      "domain": "identity-provisioning"
+    },
+    {
+      "canonical": "Unicode CLDR",
+      "aliases": ["CLDR", "Common Locale Data Repository"],
+      "uri": "https://cldr.unicode.org/",
+      "domain": "internationalization"
+    }
+  ]
+}

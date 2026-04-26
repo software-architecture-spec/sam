@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# SAM pre-commit hook — runs tools/validate.py if any tracked spec/schema/registry/conformance file is staged.
+#
+# Enable for this clone:
+#   git config core.hooksPath .githooks
+#
+# Bypass (use sparingly):
+#   git commit --no-verify
+
+set -euo pipefail
+
+# Only run if relevant files are staged
+relevant_pattern='^(sam/|registry/|tools/validate\.py|\.github/workflows/validate\.yml)'
+if ! git diff --cached --name-only --diff-filter=ACMR | grep -qE "$relevant_pattern"; then
+    exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "pre-commit: python3 not found; skipping SAM validation" >&2
+    exit 0
+fi
+
+if ! python3 -c 'import jsonschema' 2>/dev/null; then
+    echo "pre-commit: jsonschema not installed; install with 'pip install jsonschema' to enable validation" >&2
+    echo "pre-commit: skipping (use --no-verify to commit anyway)" >&2
+    exit 0
+fi
+
+echo "pre-commit: running SAM repo validator..."
+if ! python3 tools/validate.py --quiet; then
+    echo "" >&2
+    echo "pre-commit: SAM validation FAILED. Fix the issues above, or commit with --no-verify to bypass." >&2
+    exit 1
+fi
+echo "pre-commit: SAM validation OK"

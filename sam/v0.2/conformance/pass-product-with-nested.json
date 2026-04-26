@@ -1,0 +1,43 @@
+{
+  "manifestVersion": "0.2",
+  "subject": {
+    "layer": "product",
+    "name": "test-product",
+    "version": "3.0.0",
+    "components": [
+      {
+        "layer": "service",
+        "name": "test-product-svc",
+        "version": "3.0.0",
+        "manifestUri": "https://example.com/sam.json"
+      }
+    ]
+  },
+  "intent": {
+    "purpose": "Conformance corpus test fixture.",
+    "audience": "single_user",
+    "tenancy": {
+      "model": "none"
+    }
+  },
+  "envelope": {
+    "throughput": {},
+    "scaling": {
+      "axis": "none"
+    },
+    "instantiation": {
+      "mode": "singleton"
+    },
+    "privilege": {
+      "runtime": "unprivileged"
+    },
+    "network": {
+      "posture": "isolated"
+    }
+  },
+  "qualityAttributes": {},
+  "producer": {
+    "name": "Test Producer",
+    "issuedAt": "2026-04-26T15:00:00Z"
+  }
+}
