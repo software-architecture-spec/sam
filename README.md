@@ -6,9 +6,11 @@ SBOM tells you what's inside the software. SLSA tells you how it was built. Open
 
 > A nutrition label for architecture, signed by the maintainer, shipped on every artifact.
 
-> **Working draft — not adoption-ready.** SAM is a v0 working proposal. Breaking changes are still possible (per `SPECIFICATION.md §6.1`); the stable target is v1. We are publishing this draft to gather technical review and contributors, *not* to declare a finished standard. If you operate SAMs in production today, you are early — please file feedback. **What we're asking for:** technical review of the schema and spec from supply-chain, security, and procurement practitioners; real-world authoring feedback (what's hard, what's missing); citations and registry contributions; implementations of the spec-aware validator surface (§5.1.6, §5.1.7, §5.1.9, §5.1.11). See [CONTRIBUTING.md](CONTRIBUTING.md), [ROADMAP.md](ROADMAP.md), and the [issue templates](.github/ISSUE_TEMPLATE/).
+> **SAM is an architectural visibility framework, not a compliance framework.** Consumers under specific regimes (EU DORA, NIS2, SOC 2, HIPAA, ISO/IEC 27036, NIST SP 800-161, FedRAMP, etc.) use SAM's structured surface to populate *their own* compliance artifacts. SAM does not fulfill any of those regimes on its own; it makes the producer's architectural claims machine-readable so the consumer's compliance work has a stable upstream input. The line is intentional: scope creep into compliance form-filling would compromise the primary value — describing what the software *is*, regardless of who is reading.
 
-The current version is **v0.2**. v0.1 is frozen at [`/sam/v0.1/`](sam/v0.1/) and remains accessible at its URIs (per `SPECIFICATION.md §6.3`, same-MAJOR backward compatibility).
+> **Working draft — not adoption-ready.** SAM is a v0 working proposal. Breaking changes are still possible (per `SPECIFICATION.md §6.1`); the stable target is v1. We are publishing this draft to gather technical review and contributors, *not* to declare a finished standard. If you operate SAMs in production today, you are early — please file feedback. **What we're asking for:** technical review of the schema and spec from supply-chain, security, and procurement practitioners; real-world authoring feedback (what's hard, what's missing); citations and registry contributions; implementations of the spec-aware validator surface (§5.1.6, §5.1.7, §5.1.9, §5.1.11). See [CONTRIBUTING.md](CONTRIBUTING.md), [ROADMAP.md](ROADMAP.md), and the [issue templates](https://github.com/software-architecture-spec/software-architecture-spec.github.io/issues/new/choose).
+
+The current version is **v0.2**. v0.1 is frozen — see [`sam/v0.1/SPECIFICATION.md`](sam/v0.1/SPECIFICATION.md) — and remains accessible at its URIs (per `SPECIFICATION.md §6.3`, same-MAJOR backward compatibility).
 
 > **Normative reference.** The [SPECIFICATION.md](sam/v0.2/SPECIFICATION.md) document is the normative source for what a conforming SAM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–9 are written: Scope, Terminology, Conformance language, Threat model, Definition of a conforming SAM, Versioning, Extensibility, Stability, **SAM Levels (L0–L3)**. Authoring guide, verification guide, and lifecycle policy are deferred.
 
@@ -21,6 +23,22 @@ The current version is **v0.2**. v0.1 is frozen at [`/sam/v0.1/`](sam/v0.1/) and
 In the AI era, a vibe-coded weekend prototype and a hardened production service are visually indistinguishable: same React frontend, same Postgres, same Dockerfile, same deployment pipeline. The Access database on a shared drive used to advertise its own fragility. The modern equivalent does not.
 
 SAM restores that signal. A manifest that honestly declares `audience: single_user`, `scaling: none`, `observability: unspecified`, `tenancy: none` *is* the modern `.mdb` file announcing what it is — without the ambiguity of inference from stack choices.
+
+## What SAM is — and what it isn't
+
+**SAM is** a producer-signed declaration of *architectural facts about software*: intent, operational envelope (including third-party operational dependencies), ISO/IEC 25010:2023 quality claims with industry-standard cross-references, and chosen postures on cross-attribute tensions. Audience: any consumer who needs to assess what software was designed to be — procurement, security, SRE, audit, AI agents, downstream developers.
+
+**SAM is not:**
+
+- A **compliance framework**. SAM does not satisfy DORA, NIS2, SOC 2, HIPAA, FedRAMP, or any other regime. Consumers under those regimes read SAM to feed their own compliance artifacts; SAM's job is the architectural input layer.
+- A **bill of materials**. SBOM (CycloneDX, SPDX) lists components inside the software; SAM declares what the software was designed to be. Reference an SBOM via `subject.sbomRef`.
+- A **build attestation**. SLSA / in-toto cover provenance — how the software was built. SAM is a sibling predicate signed via the same envelope.
+- A **vulnerability disclosure**. CSAF / VEX cover that.
+- A **license declaration**. SBOM territory.
+- A **legal contract** or **service-level agreement**. SAM carries no automatic legal weight; a separate contract may incorporate SAM claims by reference.
+- A **substitute for testing or due diligence**. Evidence URIs reference verification artifacts; reading a SAM does not relieve the consumer of evaluating the producer's claims against their own risk tolerance.
+
+The full normative scope is in [`SPECIFICATION.md §1`](sam/v0.2/SPECIFICATION.md).
 
 ---
 
@@ -175,7 +193,7 @@ This means cosign, sigstore, and any in-toto-aware tooling can sign and verify S
 
 ### v0.1 (frozen)
 
-- `sam/v0.1/` — preserved at its URIs; new manifests should use v0.2.
+- [`sam/v0.1/SPECIFICATION.md`](sam/v0.1/SPECIFICATION.md), [`sam/v0.1/schema.json`](sam/v0.1/schema.json), and the v0.1 examples are preserved at their URIs; new manifests should use v0.2.
 
 ### Validation
 

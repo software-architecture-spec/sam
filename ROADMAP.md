@@ -78,11 +78,28 @@ These are prose-heavy and depend on observed authoring patterns. They'll land on
 - **`x-sam-stability` validation behavior.** Currently descriptive only (per §8.3). Future versions may give it semantics — e.g., consumers reject manifests that promise `stable` but use fields marked `experimental`.
 - **`v1.0`.** Declared when the v0.x field set has stabilized through real use, conformance test surface is comprehensive, the canonical-strings registry has settled, and at least one working-group home has accepted the spec.
 
+## Open questions
+
+These came out of an early consumer-side review of v0.2 examples. Each is either a v0.3 candidate (above) or explicitly out of scope (below) — listed here so the reasoning is visible.
+
+- **Data residency of the subject itself.** v0.2 declares jurisdiction per dependency but not where the subject's own data lives. Consumer review flagged this as a critical DORA + GDPR Ch. V gap. *Resolution:* added as a v0.3 candidate at `intent.tenancy.dataResidency[]`.
+- **Audit metadata on `industryRefs[]`.** A `SOC 2 Type 2` cite without auditor / period / date is procurement-useless. *Resolution:* v0.3 candidate.
+- **SLA / SLO surface.** Incident-response SLA, vulnerability-patch SLA, MTTR/MTBF, support hours, RPO/RTO are quality claims real consumers ask for. *Resolution:* v0.3 candidate at `envelope.serviceLevels` (service- and product-layer only).
+- **Subcontractor / nth-party chain per dependency.** DORA Art. 28 cares about sub-outsourcing. *Resolution:* **out of scope** — see below. SAM declares architectural facts; tracking each provider's own subcontractor chain is the consumer's compliance register, not the producer's manifest.
+- **Exit / portability strategy per dependency.** Single `alternative` enum field is coarser than DORA expects. *Resolution:* **out of scope** — same rationale. The `alternative` field signals architectural substitutability; cutover plans are contractual.
+- **Replaceability semantics.** Reviewer flagged `flexibility.replaceability: not_applicable` as "philosophically odd — every system has a replaceability story." *Resolution:* open. Possible v0.3 wording change in `SPECIFICATION.md` to constrain when `not_applicable` is appropriate; gathering more authoring feedback first.
+- **Layer terminology clarity.** Reviewer had to infer the `artifact` / `service` / `product` hierarchy without the spec. *Resolution:* open — the layer model itself is sound; the README and authoring guide can do better at signaling the hierarchy at a glance.
+
 ## Explicitly out of scope
+
+SAM is an **architectural visibility framework**, not a compliance framework. The line below isn't a refusal of compliance use cases — it's a refusal of letting compliance use cases dictate the shape of the architectural surface. Consumers under any specific regime read SAM to populate their own compliance artifacts; SAM's job is the architectural input layer that survives every regime simultaneously.
 
 These are real concerns adjacent to SAM but **not** SAM's job:
 
-- **DORA-specific compliance fields** — subcontractor / nth-party chain, exit/portability strategy per dependency, concentration-risk metadata, register-of-information shape. These are *contractual* and *consumer-side* concerns, not architectural facts about the subject. SAM is a quality spec, not a compliance form. `envelope.dependencies[]` gives DORA consumers the upstream architectural input they need; populating their own register is their work, not the producer's manifest format.
+- **Compliance form-filling for any specific regime.** DORA Art. 28 third-party register entries, NIS2 essential / important classifications, SOC 2 control narratives, HIPAA security risk assessments, FedRAMP SSP sections — all consumer-side artifacts that SAM helps populate but does not itself replace.
+- **Subcontractor / nth-party chain per dependency.** Producer declares dependencies; consumer reasons about sub-outsourcing.
+- **Exit / portability strategy per dependency.** Contractual surface, not architectural.
+- **Concentration-risk metadata.** Cross-vendor consumer concern; impossible for any single producer to declare.
 - **Vulnerability disclosures.** Use CSAF / VEX. SAM links to relevant security claims via `industryRefs[]` and evidence URIs.
 - **License declarations.** Use SBOM (CycloneDX, SPDX) referenced via `subject.sbomRef`.
 - **Build provenance.** Use SLSA / in-toto attestations as siblings to the SAM predicate.
