@@ -14,7 +14,10 @@
     "audience": "multi_tenant",
     "tenancy": {
       "model": "shared",
-      "isolationGuarantees": ["data", "identity"]
+      "isolationGuarantees": [
+        "data",
+        "identity"
+      ]
     },
     "outOfScope": [
       "Air-gapped deployment",
@@ -26,8 +29,15 @@
     "throughput": {
       "targetRps": 500,
       "maxRps": 2000,
-      "latency": { "p50Ms": 80, "p95Ms": 200, "p99Ms": 600 },
-      "concurrency": { "maxConcurrentRequests": 1500, "maxConcurrentUsers": 5000 }
+      "latency": {
+        "p50Ms": 80,
+        "p95Ms": 200,
+        "p99Ms": 600
+      },
+      "concurrency": {
+        "maxConcurrentRequests": 1500,
+        "maxConcurrentUsers": 5000
+      }
     },
     "scaling": {
       "axis": "horizontal",
@@ -45,16 +55,33 @@
     "network": {
       "posture": "bidirectional",
       "exposedPorts": [
-        { "port": 8080, "protocol": "http", "purpose": "API + health" }
+        {
+          "port": 8080,
+          "protocol": "http",
+          "purpose": "API + health"
+        }
       ],
       "requiredEgress": [
-        { "host": "metrics-db.internal", "port": 5432, "protocol": "tcp", "purpose": "Primary datastore" },
-        { "host": "billing-svc.internal", "port": 443, "protocol": "https", "purpose": "Billing aggregation" }
+        {
+          "host": "metrics-db.internal",
+          "port": 5432,
+          "protocol": "tcp",
+          "purpose": "Primary datastore"
+        },
+        {
+          "host": "billing-svc.internal",
+          "port": 443,
+          "protocol": "https",
+          "purpose": "Billing aggregation"
+        }
       ]
     },
     "persistence": {
       "required": true,
-      "stores": ["sql", "kv"]
+      "stores": [
+        "sql",
+        "kv"
+      ]
     }
   },
   "qualityAttributes": {
@@ -63,34 +90,51 @@
         "status": "verified",
         "summary": "P95 < 200ms at 500 RPS sustained.",
         "industryRefs": [
-          { "standard": "ISO/IEC 25010", "version": "2023", "referenceUri": "https://iso25000.com/index.php/en/iso-25000-standards/iso-25010" }
-        ],
-        "informationalRefs": ["banyan://bnyn-9559c09c"]
+          {
+            "standard": "ISO/IEC 25010",
+            "version": "2023",
+            "referenceUri": "https://iso25000.com/index.php/en/iso-25000-standards/iso-25010"
+          }
+        ]
       },
       "subCharacteristics": {
         "timeBehaviour": {
           "status": "verified",
           "summary": "P95 < 200ms verified at 500 RPS over 1h.",
           "evidence": [
-            { "type": "load_test", "uri": "https://artifacts.example.com/metrics-dashboard-api/2.4.1/k6-report.json", "digest": "sha256:6a4f9e2c8b1d3e5a7f9c0b2d4e6a8f1c3b5d7e9f1a3c5b7d9e1f3a5c7b9d1e3f" }
+            {
+              "type": "load_test",
+              "uri": "https://artifacts.example.com/metrics-dashboard-api/2.4.1/k6-report.json",
+              "digest": "sha256:6a4f9e2c8b1d3e5a7f9c0b2d4e6a8f1c3b5d7e9f1a3c5b7d9e1f3a5c7b9d1e3f"
+            }
           ]
         },
-        "capacity": { "status": "declared", "summary": "Designed-for ceiling 2000 RPS per cluster." }
+        "capacity": {
+          "status": "declared",
+          "summary": "Designed-for ceiling 2000 RPS per cluster."
+        }
       }
     },
     "reliability": {
       "overall": {
         "status": "verified",
-        "summary": "Tolerant to single-region DB failover. AP posture.",
-        "informationalRefs": ["banyan://bnyn-dd43279a"]
+        "summary": "Tolerant to single-region DB failover. AP posture."
       },
       "subCharacteristics": {
         "faultTolerance": {
           "status": "verified",
           "summary": "Circuit breakers on all egress. Chaos test runs in CI.",
-          "evidence": [{ "type": "chaos_test", "uri": "https://ci.example.com/runs/8842" }]
+          "evidence": [
+            {
+              "type": "chaos_test",
+              "uri": "https://ci.example.com/runs/8842"
+            }
+          ]
         },
-        "availability": { "status": "declared", "summary": "99.9% within designed envelope." }
+        "availability": {
+          "status": "declared",
+          "summary": "99.9% within designed envelope."
+        }
       }
     },
     "security": {
@@ -98,19 +142,38 @@
         "status": "verified",
         "summary": "Annual pentest + quarterly SAST. No known criticals.",
         "industryRefs": [
-          { "standard": "NIST SP 800-218", "version": "1.1", "conformance": "Self-attested per CISA SSDF attestation form", "referenceUri": "https://csrc.nist.gov/Projects/ssdf" },
-          { "standard": "OWASP ASVS", "version": "5.0", "conformance": "L2" },
-          { "standard": "SOC 2", "conformance": "Type 2" }
-        ],
-        "informationalRefs": ["banyan://bnyn-429ea549"]
+          {
+            "standard": "NIST SP 800-218",
+            "version": "1.1",
+            "conformance": "Self-attested per CISA SSDF attestation form",
+            "referenceUri": "https://csrc.nist.gov/Projects/ssdf"
+          },
+          {
+            "standard": "OWASP ASVS",
+            "version": "5.0",
+            "conformance": "L2"
+          },
+          {
+            "standard": "SOC 2",
+            "conformance": "Type 2"
+          }
+        ]
       },
       "subCharacteristics": {
         "confidentiality": {
           "status": "verified",
           "summary": "TLS in transit, KMS-encrypted at rest, tenant_id enforced at query layer.",
-          "industryRefs": [{ "standard": "ISO/IEC 27001", "version": "2022" }]
+          "industryRefs": [
+            {
+              "standard": "ISO/IEC 27001",
+              "version": "2022"
+            }
+          ]
         },
-        "authenticity": { "status": "verified", "summary": "OIDC at edge, mTLS between services." }
+        "authenticity": {
+          "status": "verified",
+          "summary": "OIDC at edge, mTLS between services."
+        }
       }
     },
     "compatibility": {
@@ -118,40 +181,59 @@
         "status": "declared",
         "summary": "REST + JSON. OpenAPI 3.1. Backward compatible across minor versions.",
         "industryRefs": [
-          { "standard": "OpenAPI", "version": "3.1.0", "referenceUri": "https://spec.openapis.org/oas/v3.1.0" }
-        ],
-        "informationalRefs": ["banyan://bnyn-a9a8c929"]
+          {
+            "standard": "OpenAPI",
+            "version": "3.1.0",
+            "referenceUri": "https://spec.openapis.org/oas/v3.1.0"
+          }
+        ]
       }
     },
     "maintainability": {
       "overall": {
         "status": "verified",
-        "summary": "85% behavioral test coverage. ADRs for every architectural decision.",
-        "informationalRefs": ["banyan://bnyn-65e28ec6"]
+        "summary": "85% behavioral test coverage. ADRs for every architectural decision."
       },
       "subCharacteristics": {
-        "testability": { "status": "verified", "summary": "Contract tests at every service boundary." }
+        "testability": {
+          "status": "verified",
+          "summary": "Contract tests at every service boundary."
+        }
       }
     },
     "flexibility": {
       "overall": {
         "status": "declared",
-        "summary": "Stateless services. Kubernetes-portable. Not designed for on-prem.",
-        "informationalRefs": ["banyan://bnyn-c4ebc80b"]
+        "summary": "Stateless services. Kubernetes-portable. Not designed for on-prem."
       },
       "subCharacteristics": {
-        "scalability": { "status": "verified", "summary": "Horizontal to 50 instances verified." },
-        "installability": { "status": "declared", "summary": "Helm chart + Terraform module." }
+        "scalability": {
+          "status": "verified",
+          "summary": "Horizontal to 50 instances verified."
+        },
+        "installability": {
+          "status": "declared",
+          "summary": "Helm chart + Terraform module."
+        }
       }
     },
     "interactionCapability": {
-      "overall": { "status": "not_applicable", "summary": "Backend API. UI is shipped separately." }
+      "overall": {
+        "status": "not_applicable",
+        "summary": "Backend API. UI is shipped separately."
+      }
     },
     "functionalSuitability": {
-      "overall": { "status": "verified", "summary": "All endpoints have spec tests against the OpenAPI contract." }
+      "overall": {
+        "status": "verified",
+        "summary": "All endpoints have spec tests against the OpenAPI contract."
+      }
     },
     "safety": {
-      "overall": { "status": "not_applicable", "summary": "No physical or safety-critical surface." }
+      "overall": {
+        "status": "not_applicable",
+        "summary": "No physical or safety-critical surface."
+      }
     }
   },
   "extensions": {
@@ -159,18 +241,26 @@
       "status": "verified",
       "summary": "Structured logs (no PII), Prometheus metrics, OTLP traces with correlation IDs across all egress.",
       "industryRefs": [
-        { "standard": "OpenTelemetry", "version": "1.40.0", "referenceUri": "https://opentelemetry.io/docs/specs/semconv/" }
-      ],
-      "informationalRefs": ["banyan://bnyn-87a07fdc"]
+        {
+          "standard": "OpenTelemetry",
+          "version": "1.40.0",
+          "referenceUri": "https://opentelemetry.io/docs/specs/semconv/"
+        }
+      ]
     },
     "dataLifecycle": {
       "status": "declared",
       "summary": "Tenant data retained 90 days post-deletion request, then hard-deleted. Audit log retained 7 years.",
       "industryRefs": [
-        { "standard": "GDPR", "conformance": "Article 17 (right to erasure)" },
-        { "standard": "ISO/IEC 25012", "version": "2008" }
-      ],
-      "informationalRefs": ["banyan://bnyn-c0e69992"]
+        {
+          "standard": "GDPR",
+          "conformance": "Article 17 (right to erasure)"
+        },
+        {
+          "standard": "ISO/IEC 25012",
+          "version": "2008"
+        }
+      ]
     },
     "internationalization": {
       "status": "not_applicable",
@@ -178,8 +268,7 @@
     },
     "contextWindowManagement": {
       "status": "declared",
-      "summary": "ADRs in /docs/adr. Pattern catalog in /docs/patterns. ~120 modules, fits in standard agent context.",
-      "informationalRefs": ["banyan://bnyn-584082ca"]
+      "summary": "ADRs in /docs/adr. Pattern catalog in /docs/patterns. ~120 modules, fits in standard agent context."
     }
   },
   "tensionsDeclared": [

@@ -6,7 +6,9 @@ SBOM tells you what's inside the artifact. SLSA tells you how it was built. Open
 
 > A nutrition label for architecture, signed by the maintainer, shipped on every artifact.
 
-This is the v0 schema. Companion to *Designed to Fail* (essay) and the [Banyan NFR trunk](https://banyan.vamitra.com/trunk/bnyn-10b6f56d).
+This is the v0 schema.
+
+> **Note on the namespace.** The schema's `$id` (`https://quality-software.dev/...`) is a placeholder. For DIM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group), not a personal domain. Treat the current `$id` as draft.
 
 ---
 
@@ -77,7 +79,7 @@ This three-track model (declared / verified / unspecified) mirrors how SBOM stan
 DIM uses two reference layers per claim:
 
 - **`industryRefs[]`** — *normative*. Industry-standard anchors that auditors and procurement teams recognize. First-class on the manifest because they outlive any single host or vendor.
-- **`informationalRefs[]`** — *non-normative*. Pointers to design context (pattern catalogs, internal docs, the Banyan trunk) that aided the producer's reasoning. Useful for AI agents and humans who want to drill into rationale; not anchors an auditor relies on.
+- **`informationalRefs[]`** — *non-normative*. https URIs to design-context resources (pattern catalogs, internal docs, knowledge bases) that aided the producer's reasoning. Useful for AI agents and humans who want to drill into rationale; not anchors an auditor relies on.
 
 ### Top-level standards
 
@@ -103,12 +105,6 @@ DIM uses two reference layers per claim:
 | Build / supply chain (top-level) | SLSA build level (L0–L3, where L0 = no claim), in-toto attestation, CycloneDX/SPDX |
 
 These are starting points, not an exhaustive list. Producers populate `industryRefs[]` with whatever standards their audit/procurement context actually recognizes. The schema does not constrain the `standard` field to an enum — interoperability with industry catalogs takes precedence over schema-side validation.
-
-### Why the Banyan trunk is informational, not normative
-
-The Banyan trunk `bnyn-10b6f56d` is the best content source for AI-prompt-ready NFR guidance — the trunk's `what:requirement / how:pattern / when:trigger` shape is action-oriented in a way ISO 25010's prose is not. But Banyan is single-vendor, single-host, and the IDs (`bnyn-9559c09c`) mean nothing in a compliance review. References on a *signed* artifact need to outlive any host they point at.
-
-So Banyan references live in `informationalRefs[]` (using a `banyan://<id>` URI shape), and the normative weight sits with `industryRefs[]`. AI agents reading the manifest can dereference the Banyan link for prompt context; auditors ignore it and read the industry anchors.
 
 ### Why ISO 25010, but not only
 
@@ -154,9 +150,28 @@ check-jsonschema --schemafile schema/design-intent-manifest.v0.schema.json examp
 
 ## Status
 
-v0.1 — draft, breaking changes expected. The goal of v0 is to get the field set right, not to lock the format. Open questions:
+v0.1 — draft. Breaking changes expected. The goal of v0 is to get the field set right, not to lock the format.
+
+### v0 conventions
+
+- **Strict objects.** All schema objects use `additionalProperties: false`. Vendor extensions are deferred to v0.2 (see below).
+- **Open enums where the taxonomy is still forming.** `tensionsDeclared.tension` is an open string with documented well-known IDs (`cap_pacelc`, `observability_cost_trilemma`, etc.). For domain-specific tensions, use a stable identifier of your own with the prefix `x:` (e.g., `x:tenant_isolation_vs_cost`). Same convention will be used for any future open vocabularies.
+- **Free-text `industryRefs.standard`.** Citation strings will drift ("ISO 27001" vs "ISO/IEC 27001"). A canonical-strings registry (SPDX License List pattern) is planned as a companion artifact, not as schema-side enum enforcement.
+- **`informationalRefs[]` requires URIs.** Use https. No private URI schemes.
+
+### Open questions
 
 - Per-characteristic enum constraints on ISO 25010 sub-characteristic keys (currently any-string for ergonomics).
-- Whether `tensionsDeclared` should be required or optional.
-- Evidence verification: should the schema demand the evidence URI is itself a signed attestation?
+- Conditional `if/then` so `evidence` is required when `status: verified` and `summary` is required when `status: declared|verified`.
+- Whether `tensionsDeclared` should be required (today: optional).
+- Evidence verification: should the schema require evidence URIs to themselves be signed attestations?
 - Whether to add a `lifecycle` section (active, maintenance, deprecated, abandoned) or leave that to package metadata.
+
+### Planned for v0.2 / next sessions
+
+- **Narrative specification (`SPECIFICATION.md`)** — threat model, DIM levels (L0 = no manifest, L1 = declared-only, L2 = with `industryRefs`, L3 = verified with evidence), authoring guide, verification guide, lifecycle policy.
+- **Vendor extension namespace.** Allow `x-<vendor>-<key>` keys on extension-point objects (`qualityAttributes`, `extensions`, `qualityAttributeClaim`) following the CycloneDX / OpenAPI pattern.
+- **Stability annotations** per field (stable / experimental / deprecated) to make the maintainability path explicit.
+- **Canonical-strings registry** for `industryRefs.standard` to reduce citation drift.
+- **Conformance test suite** — a corpus of known-good and known-bad manifests with expected validator outputs.
+- **Anchor-gap closures** flagged by the citations audit: `extensions.contextWindowManagement` → OWASP LLM Top 10 / NIST AI RMF; `envelope.privilege` + `envelope.network` → CIS Benchmarks / NIST SP 800-190; `extensions.dataLifecycle` deletion side → NIST SP 800-88 Rev. 1.

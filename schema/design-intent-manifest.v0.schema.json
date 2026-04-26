@@ -324,7 +324,9 @@
         "additionalProperties": false,
         "properties": {
           "tension": {
-            "enum": [
+            "type": "string",
+            "description": "Identifier for the tension. Well-known values (informational, not enforced): 'cap_pacelc' (consistency vs availability vs latency), 'observability_cost_trilemma' (resolution vs cost vs freshness), 'test_suite_tension' (coverage vs maintainability), 'observability_pii' (diagnosability vs PII exposure), 'security_performance_isolation' (boundary enforcement vs latency). For domain-specific tensions, use a stable identifier of your own with the prefix 'x:' (e.g., 'x:tenant_isolation_vs_cost').",
+            "examples": [
               "cap_pacelc",
               "observability_cost_trilemma",
               "test_suite_tension",
@@ -412,8 +414,8 @@
         },
         "informationalRefs": {
           "type": "array",
-          "description": "Non-normative pointers to additional context — pattern catalogs, design references, internal docs, or external knowledge bases that aided the producer's reasoning. Useful for AI agents and humans who want to drill into the design rationale, but not anchors an auditor relies on. Example: a Banyan trunk branch ID for AI prompt context.",
-          "items": { "type": "string" }
+          "description": "Non-normative pointers to additional context — pattern catalogs, design references, internal docs, or external knowledge bases that aided the producer's reasoning. Useful for AI agents and humans who want to drill into design rationale, but not anchors an auditor relies on. Use https URIs that resolve to stable resources.",
+          "items": { "type": "string", "format": "uri" }
         }
       }
     }

@@ -10,14 +10,18 @@
         "layer": "artifact",
         "name": "onboarding-portal-api",
         "version": "5.12.0",
-        "digest": { "sha256": "9f3e8d7c6b5a49382716e0a5b4c3d2e1f0987654321fedcba0987654321fedcb" },
+        "digest": {
+          "sha256": "9f3e8d7c6b5a49382716e0a5b4c3d2e1f0987654321fedcba0987654321fedcb"
+        },
         "manifestUri": "https://artifacts.corp.example/onboarding-portal-api/5.12.0/dim.json"
       },
       {
         "layer": "artifact",
         "name": "onboarding-portal-worker",
         "version": "5.12.0",
-        "digest": { "sha256": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809" },
+        "digest": {
+          "sha256": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809"
+        },
         "manifestUri": "https://artifacts.corp.example/onboarding-portal-worker/5.12.0/dim.json"
       }
     ]
@@ -39,8 +43,15 @@
     "throughput": {
       "targetRps": 25,
       "maxRps": 100,
-      "latency": { "p50Ms": 150, "p95Ms": 500, "p99Ms": 1500 },
-      "concurrency": { "maxConcurrentRequests": 200, "maxConcurrentUsers": 800 }
+      "latency": {
+        "p50Ms": 150,
+        "p95Ms": 500,
+        "p99Ms": 1500
+      },
+      "concurrency": {
+        "maxConcurrentRequests": 200,
+        "maxConcurrentUsers": 800
+      }
     },
     "scaling": {
       "axis": "horizontal",
@@ -58,18 +69,44 @@
     "network": {
       "posture": "bidirectional",
       "exposedPorts": [
-        { "port": 8443, "protocol": "https", "purpose": "Portal UI + API, behind corporate load balancer" }
+        {
+          "port": 8443,
+          "protocol": "https",
+          "purpose": "Portal UI + API, behind corporate load balancer"
+        }
       ],
       "requiredEgress": [
-        { "host": "workday.corp.example", "port": 443, "protocol": "https", "purpose": "HRIS read/write — employee records" },
-        { "host": "corp.okta.com", "port": 443, "protocol": "https", "purpose": "SCIM provisioning, SAML AuthN" },
-        { "host": "servicenow.corp.example", "port": 443, "protocol": "https", "purpose": "IT asset request workflows" },
-        { "host": "smtp.corp.example", "port": 587, "protocol": "tcp", "purpose": "Notification email" }
+        {
+          "host": "workday.corp.example",
+          "port": 443,
+          "protocol": "https",
+          "purpose": "HRIS read/write \u2014 employee records"
+        },
+        {
+          "host": "corp.okta.com",
+          "port": 443,
+          "protocol": "https",
+          "purpose": "SCIM provisioning, SAML AuthN"
+        },
+        {
+          "host": "servicenow.corp.example",
+          "port": 443,
+          "protocol": "https",
+          "purpose": "IT asset request workflows"
+        },
+        {
+          "host": "smtp.corp.example",
+          "port": 587,
+          "protocol": "tcp",
+          "purpose": "Notification email"
+        }
       ]
     },
     "persistence": {
       "required": true,
-      "stores": ["sql"]
+      "stores": [
+        "sql"
+      ]
     }
   },
   "qualityAttributes": {
@@ -78,7 +115,10 @@
         "status": "verified",
         "summary": "All onboarding workflows tested against Workday and Okta sandboxes weekly. Functional spec maintained in /docs/spec.",
         "industryRefs": [
-          { "standard": "ISO/IEC 25010", "version": "2023" }
+          {
+            "standard": "ISO/IEC 25010",
+            "version": "2023"
+          }
         ]
       }
     },
@@ -93,11 +133,21 @@
         "status": "verified",
         "summary": "Integrates via standard enterprise identity and provisioning protocols. No proprietary connectors.",
         "industryRefs": [
-          { "standard": "SAML", "version": "2.0", "referenceUri": "https://docs.oasis-open.org/security/saml/v2.0/" },
-          { "standard": "SCIM", "version": "2.0", "referenceUri": "https://datatracker.ietf.org/doc/html/rfc7644" },
-          { "standard": "OpenAPI", "version": "3.0.3" }
-        ],
-        "informationalRefs": ["banyan://bnyn-a9a8c929"]
+          {
+            "standard": "SAML",
+            "version": "2.0",
+            "referenceUri": "https://docs.oasis-open.org/security/saml/v2.0/"
+          },
+          {
+            "standard": "SCIM",
+            "version": "2.0",
+            "referenceUri": "https://datatracker.ietf.org/doc/html/rfc7644"
+          },
+          {
+            "standard": "OpenAPI",
+            "version": "3.0.3"
+          }
+        ]
       },
       "subCharacteristics": {
         "coExistence": {
@@ -111,10 +161,18 @@
         "status": "verified",
         "summary": "Audited annually. AA conformance required for internal HR systems by corporate policy.",
         "industryRefs": [
-          { "standard": "WCAG", "version": "2.2", "conformance": "AA", "referenceUri": "https://www.w3.org/TR/WCAG22/" }
+          {
+            "standard": "WCAG",
+            "version": "2.2",
+            "conformance": "AA",
+            "referenceUri": "https://www.w3.org/TR/WCAG22/"
+          }
         ],
         "evidence": [
-          { "type": "accessibility_audit", "uri": "https://corp-audit.example/onboarding-portal/2026-Q1/wcag22-aa-report.pdf" }
+          {
+            "type": "accessibility_audit",
+            "uri": "https://corp-audit.example/onboarding-portal/2026-Q1/wcag22-aa-report.pdf"
+          }
         ]
       },
       "subCharacteristics": {
@@ -145,15 +203,32 @@
         "status": "verified",
         "summary": "Tier-2 internal app under corporate ISMS. Annual pentest. Quarterly access review.",
         "industryRefs": [
-          { "standard": "ISO/IEC 27001", "version": "2022", "conformance": "certified scope: corp ISMS" },
-          { "standard": "NIST SP 800-53", "version": "Rev. 5", "conformance": "Moderate baseline" },
-          { "standard": "SOC 2", "conformance": "Type 2" },
-          { "standard": "OWASP ASVS", "version": "5.0", "conformance": "L2" }
+          {
+            "standard": "ISO/IEC 27001",
+            "version": "2022",
+            "conformance": "certified scope: corp ISMS"
+          },
+          {
+            "standard": "NIST SP 800-53",
+            "version": "Rev. 5",
+            "conformance": "Moderate baseline"
+          },
+          {
+            "standard": "SOC 2",
+            "conformance": "Type 2"
+          },
+          {
+            "standard": "OWASP ASVS",
+            "version": "5.0",
+            "conformance": "L2"
+          }
         ],
         "evidence": [
-          { "type": "security_scan", "uri": "https://corp-sec.example/onboarding-portal/2026-Q1/pentest-report.pdf" }
-        ],
-        "informationalRefs": ["banyan://bnyn-429ea549"]
+          {
+            "type": "security_scan",
+            "uri": "https://corp-sec.example/onboarding-portal/2026-Q1/pentest-report.pdf"
+          }
+        ]
       },
       "subCharacteristics": {
         "confidentiality": {
@@ -211,7 +286,10 @@
       }
     },
     "safety": {
-      "overall": { "status": "not_applicable", "summary": "Administrative system; no physical or safety-critical surface." }
+      "overall": {
+        "status": "not_applicable",
+        "summary": "Administrative system; no physical or safety-critical surface."
+      }
     }
   },
   "extensions": {
@@ -219,28 +297,43 @@
       "status": "verified",
       "summary": "Structured JSON logs (PII redacted), Prometheus metrics scraped by corp Observability platform, OTLP traces.",
       "industryRefs": [
-        { "standard": "OpenTelemetry", "version": "1.40.0" }
-      ],
-      "informationalRefs": ["banyan://bnyn-87a07fdc"]
+        {
+          "standard": "OpenTelemetry",
+          "version": "1.40.0"
+        }
+      ]
     },
     "dataLifecycle": {
       "status": "verified",
-      "summary": "I-9 forms retained 3 years from hire OR 1 year from termination, whichever is later (8 CFR 274a.2). Payroll and tax records retained 7 years (IRS / SOX §802 / Reg S-X 2-06). Other employee PII purged on termination + cooldown unless under legal hold. Audit logs retained 10 years per corporate retention policy.",
+      "summary": "I-9 forms retained 3 years from hire OR 1 year from termination, whichever is later (8 CFR 274a.2). Payroll and tax records retained 7 years (IRS / SOX \u00a7802 / Reg S-X 2-06). Other employee PII purged on termination + cooldown unless under legal hold. Audit logs retained 10 years per corporate retention policy.",
       "industryRefs": [
-        { "standard": "SOX", "conformance": "Section 802 (record retention)" },
-        { "standard": "8 CFR 274a.2", "conformance": "I-9 retention rule" },
-        { "standard": "GDPR", "conformance": "Article 17 (right to erasure, with legal-claims exception under Article 17(3)(e))" },
-        { "standard": "ISO/IEC 25012", "version": "2008" }
-      ],
-      "informationalRefs": ["banyan://bnyn-c0e69992"]
+        {
+          "standard": "SOX",
+          "conformance": "Section 802 (record retention)"
+        },
+        {
+          "standard": "8 CFR 274a.2",
+          "conformance": "I-9 retention rule"
+        },
+        {
+          "standard": "GDPR",
+          "conformance": "Article 17 (right to erasure, with legal-claims exception under Article 17(3)(e))"
+        },
+        {
+          "standard": "ISO/IEC 25012",
+          "version": "2008"
+        }
+      ]
     },
     "internationalization": {
       "status": "declared",
       "summary": "EN, ES, FR, DE, JA. CLDR-based formatting. Workday locale propagated to portal session.",
       "industryRefs": [
-        { "standard": "Unicode CLDR", "version": "46" }
-      ],
-      "informationalRefs": ["banyan://bnyn-001f24df"]
+        {
+          "standard": "Unicode CLDR",
+          "version": "46"
+        }
+      ]
     },
     "contextWindowManagement": {
       "status": "declared",
