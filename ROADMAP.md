@@ -17,7 +17,7 @@ First public draft. Live at `https://software-architecture-spec.github.io/sam/v0
 
 
 
-## Near-term — v0.3 candidates
+## Near-term — v0.2 candidates
 
 These are likely to land next, **subject to feedback**. Each came from an early consumer-side review of the v0.1 examples that flagged gaps a procurement/security reviewer felt.
 
@@ -80,14 +80,14 @@ These are prose-heavy and depend on observed authoring patterns. They'll land on
 
 ## Open questions
 
-These came out of an early consumer-side review of the v0.1 examples. Each is either a v0.3 candidate (above) or explicitly out of scope (below) — listed here so the reasoning is visible.
+These came out of an early consumer-side review of the v0.1 examples. Each is either a v0.2 candidate (above) or explicitly out of scope (below) — listed here so the reasoning is visible.
 
-- **Data residency of the subject itself.** v0.1 declares jurisdiction per dependency but not where the subject's own data lives. Consumer review flagged this as a critical DORA + GDPR Ch. V gap. *Resolution:* added as a v0.3 candidate at `intent.tenancy.dataResidency[]`.
-- **Audit metadata on `industryRefs[]`.** A `SOC 2 Type 2` cite without auditor / period / date is procurement-useless. *Resolution:* v0.3 candidate.
-- **SLA / SLO surface.** Incident-response SLA, vulnerability-patch SLA, MTTR/MTBF, support hours, RPO/RTO are quality claims real consumers ask for. *Resolution:* v0.3 candidate at `envelope.serviceLevels` (service- and product-layer only).
+- **Data residency of the subject itself.** v0.1 declares jurisdiction per dependency but not where the subject's own data lives. Consumer review flagged this as a critical DORA + GDPR Ch. V gap. *Resolution:* added as a v0.2 candidate at `intent.tenancy.dataResidency[]`.
+- **Audit metadata on `industryRefs[]`.** A `SOC 2 Type 2` cite without auditor / period / date is procurement-useless. *Resolution:* v0.2 candidate.
+- **SLA / SLO surface.** Incident-response SLA, vulnerability-patch SLA, MTTR/MTBF, support hours, RPO/RTO are quality claims real consumers ask for. *Resolution:* v0.2 candidate at `envelope.serviceLevels` (service- and product-layer only).
 - **Subcontractor / nth-party chain per dependency.** DORA Art. 28 cares about sub-outsourcing. *Resolution:* **out of scope** — see below. SAM declares architectural facts; tracking each provider's own subcontractor chain is the consumer's compliance register, not the producer's manifest.
 - **Exit / portability strategy per dependency.** Single `alternative` enum field is coarser than DORA expects. *Resolution:* **out of scope** — same rationale. The `alternative` field signals architectural substitutability; cutover plans are contractual.
-- **Replaceability semantics.** Reviewer flagged `flexibility.replaceability: not_applicable` as "philosophically odd — every system has a replaceability story." *Resolution:* open. Possible v0.3 wording change in `SPECIFICATION.md` to constrain when `not_applicable` is appropriate; gathering more authoring feedback first.
+- **Replaceability semantics.** Reviewer flagged `flexibility.replaceability: not_applicable` as "philosophically odd — every system has a replaceability story." *Resolution:* open. Possible v0.2 wording change in `SPECIFICATION.md` to constrain when `not_applicable` is appropriate; gathering more authoring feedback first.
 - **Layer terminology clarity.** Reviewer had to infer the `artifact` / `service` / `product` hierarchy without the spec. *Resolution:* open — the layer model itself is sound; the README and authoring guide can do better at signaling the hierarchy at a glance.
 
 ## Explicitly out of scope

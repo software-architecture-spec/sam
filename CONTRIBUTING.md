@@ -74,7 +74,7 @@ Before requesting review, confirm:
 
 ## Versioning and frozen versions
 
-`/v0.1/` is the current published version (and frozen at its URIs once any consumer signs against it). Changes go to the next minor (`v0.3` while `MAJOR` is `0`) or the next major. Past versions remain at their URIs forever — that's the same-MAJOR backward-compatibility promise (§6.3).
+`/v0.1/` is the current published version (and frozen at its URIs once any consumer signs against it). Changes go to the next minor (`v0.2` while `MAJOR` is `0`) or the next major. Past versions remain at their URIs forever — that's the same-MAJOR backward-compatibility promise (§6.3).
 
 If you're proposing a change that would break a v0.1 manifest, label your issue `breaking` and explain the migration path. Whether the change lands in v0.x or waits for v1.0 depends on how disruptive it is; expect a discussion.
 
