@@ -5,13 +5,16 @@ Status: Working draft. Breaking changes expected before v1.
 
 This document is the normative reference for the Design Intent Manifest (DIM). The accompanying [JSON Schema](schema/design-intent-manifest.v0.schema.json) is the syntactic form; this document defines what conformance to that form means and what claims a DIM is asserting when it is signed.
 
-This document is structured into five sections:
+This document is structured into eight sections:
 
 1. **Scope** — what DIM is, what it isn't, who it's for
 2. **Terminology** — the words this specification uses precisely
 3. **Conformance language** — how to read MUST / SHOULD / MAY in the rest of the spec
 4. **Threat model** — what DIM defends against, what it does not
 5. **Definition of a conforming DIM** — the normative requirements for producers and consumers
+6. **Versioning** — how this specification evolves and what guarantees consumers can rely on across versions
+7. **Extensibility** — how producers extend a DIM without forking the schema
+8. **Stability** — how individual fields signal their maturity to consumers
 
 Authoring guides, verification guides, DIM levels (L0–L3), and lifecycle policy are deferred to a subsequent iteration of this specification.
 
@@ -223,6 +226,155 @@ A viewer:
 
 ---
 
+## §6 Versioning
+
+This specification, the JSON Schema, and the predicate type URI are versioned together. Consumers MUST be able to rely on stable compatibility guarantees across versions; producers MUST be able to upgrade with predictable cost.
+
+### §6.1 Version identifiers
+
+DIM uses [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) (`MAJOR.MINOR.PATCH`).
+
+- The current version is **0.1**.
+- While `MAJOR` is `0`, this specification is a working draft. Breaking changes MAY occur in minor releases.
+- The first `MAJOR` ≥ 1 release is the first stable version. From that point on, the compatibility commitments in §6.3 apply strictly.
+
+The version a manifest claims to conform to is declared in the top-level `manifestVersion` field. The same version appears in:
+
+- The JSON Schema's `$id` path component (e.g., `.../v0.1.json`).
+- The in-toto predicate type URI (e.g., `https://quality-software.dev/dim/v0.1`).
+
+These three values MUST agree for a given manifest.
+
+### §6.2 What each version-bump tier means
+
+A change is **PATCH** when it is editorial and does not change the schema, the predicate type URI, or any normative requirement. Examples: typo fixes, prose clarifications, non-normative example updates. Tools MUST treat the patched and unpatched versions as interchangeable. Tools that pin to a `MAJOR.MINOR.PATCH` triple MUST also accept any later `PATCH` of the same `MAJOR.MINOR`.
+
+A change is **MINOR** when it is additive: new optional fields, new optional sub-objects, new well-known enum values added to open enums. A manifest that conformed to `MAJOR.MINOR_OLD` MUST conform to any later `MAJOR.MINOR_NEW` of the same `MAJOR`. New consumers MUST be able to read manifests issued against earlier minor versions of the same major version.
+
+A change is **MAJOR** when it is breaking: removing a field, narrowing a value space, changing the meaning of an existing field, changing required-vs-optional status, or changing the predicate type URI. A manifest issued at one `MAJOR` MAY be invalid under the schema of the next `MAJOR`. The predicate type URI changes (e.g., `dim/v1` → `dim/v2`).
+
+### §6.3 Compatibility commitments
+
+For any two versions `A` and `B` of this specification where `A < B`:
+
+- **Same MAJOR:** A consumer of version `B` MUST accept manifests claiming any earlier minor or patch version of the same major. A producer using version `A` MUST be able to upgrade to `B` without re-issuing existing manifests, except by their own choice.
+- **Different MAJOR:** A consumer of version `B` MUST NOT silently treat a manifest claiming version `A` as a `B` manifest. The consumer SHOULD either reject the manifest, accept it in compatibility mode (validating against the `A` schema), or surface the version mismatch to the operator.
+
+### §6.4 Predicate type URI policy
+
+The canonical predicate type URI for this specification is of the form:
+
+    https://quality-software.dev/dim/v<MAJOR>[.<MINOR>]
+
+For pre-1.0 working drafts, the URI includes the minor version (`v0.1`, `v0.2`). For stable versions (`MAJOR ≥ 1`), the URI includes only the major version (`v1`, `v2`); minor versions of a stable major share a single URI because they are backward compatible by §6.3.
+
+A signing tool MUST NOT set `predicateType` to a URI different from the one declared in `manifestVersion`. A verifier MUST treat such a mismatch as an integrity failure.
+
+### §6.5 Deprecation
+
+A field, value, or sub-object MAY be marked **deprecated** in a minor version. Deprecation does not remove the field; it signals intent to remove it in the next major version. Deprecated fields:
+
+- MUST continue to validate against the schema until the next major version.
+- MUST list a successor field, value, or pattern in their description, or MUST state "removed without replacement" with rationale.
+- MUST NOT be reintroduced under the same name with different semantics in a future version.
+
+Producers SHOULD migrate away from deprecated fields. Consumers MUST continue to accept deprecated fields in any minor version of the major in which they were deprecated.
+
+---
+
+## §7 Extensibility
+
+DIM is intentionally narrow. Producers will need fields this specification does not provide. To allow growth without forking the schema, DIM follows the convention used by OpenAPI, CycloneDX, and Kubernetes: a vendor extension namespace.
+
+### §7.1 The `x-*` extension namespace
+
+Custom keys MUST be prefixed with `x-` (lowercase `x` followed by a hyphen). Custom keys SHOULD include a stable namespace identifier after the prefix to avoid collisions:
+
+    x-<namespace>-<key>
+
+Examples: `x-acme-deploy-region`, `x-redhat-fips-mode`, `x-internal-cost-center`.
+
+The namespace `x-dim-` is **reserved** for future additions defined by working-group consensus on this specification. Producers MUST NOT use `x-dim-` for vendor-specific extensions.
+
+### §7.2 Where extensions are permitted
+
+Custom `x-*` keys MAY appear on the following objects:
+
+- Each `qualityAttributeClaim` (the inner object containing `status`, `summary`, `evidence`, `industryRefs`, `informationalRefs`).
+- Each ISO 25010 characteristic object inside `qualityAttributes` (the object containing `overall` and `subCharacteristics`).
+- Each entry in the `extensions` block.
+- Each entry in `tensionsDeclared[]`.
+- Each entry in `industryRefs[]` and each entry in `evidence[]`.
+- The `producer` object.
+- Each entry in `subject.components[]`.
+
+Custom `x-*` keys MUST NOT appear on the following objects, where unknown fields would change conformance-relevant semantics:
+
+- The top-level manifest object.
+- `subject` (signing-relevant; changes here would invalidate the digest binding).
+- `manifestVersion`.
+- `intent`, `envelope`, and any of `envelope`'s sub-blocks (`throughput`, `scaling`, `instantiation`, `privilege`, `network`, `persistence`). Producers needing additional operational claims SHOULD use the `extensions` block instead.
+
+A future minor version of the JSON Schema will add `patternProperties: { "^x-": {} }` to the permitted objects. Until then, strict conformance (§5.1.12) forbids unknown keys; extensions are permitted only on objects whose schema declarations include `additionalProperties: true` or a matching `patternProperties` entry.
+
+### §7.3 What extensions may not do
+
+An extension MUST NOT:
+
+- Contradict any normative claim made elsewhere in the manifest. (E.g., `x-acme-multi-tenant: true` on a manifest with `intent.audience: single_user` is non-conforming.)
+- Be required for a consumer to evaluate the manifest's normative content.
+- Be relied on by a verifier as a basis for conformance decisions.
+
+An extension MAY:
+
+- Carry vendor-specific operational metadata (deployment regions, cost-center attribution, internal ticket IDs).
+- Carry experimental fields the producer expects to propose for inclusion in a future minor version.
+- Reference internal evidence stores, internal namespaces, or internal taxonomies.
+
+### §7.4 Tooling expectations
+
+- A validator MUST accept any `x-*` key on a permitted object without error.
+- A re-emitting tool (e.g., one that reads a manifest, modifies it, and writes it back) SHOULD preserve unknown `x-*` keys it does not recognize, to avoid silent loss of producer intent.
+- A viewer SHOULD render unknown `x-*` keys distinctly from normative fields, so consumers do not mistake them for spec-defined claims.
+
+---
+
+## §8 Stability
+
+Not every field in the schema carries the same maturity. Some are well-grounded in established standards (the `qualityAttributes` keys come from ISO/IEC 25010:2023). Some are intentionally exploratory (the `contextWindowManagement` extension addresses an AI-era concern with no formal home in any quality model yet). Consumers need to know which is which to plan their reliance.
+
+### §8.1 Stability tiers
+
+Every field defined by this specification is in exactly one of three tiers:
+
+- **stable** — The field, its name, and its semantics will not change except in a `MAJOR` version bump. Tools MAY rely on it indefinitely within a major version.
+- **experimental** — The field exists, but its name, structure, value space, or semantics MAY change in any `MINOR` version. Tools MAY use it but SHOULD be prepared for change.
+- **deprecated** — The field is scheduled for removal in the next `MAJOR` version. Tools MUST continue to accept it until that version. Producers SHOULD migrate. The deprecation notice MUST cite a successor or state "removed without replacement."
+
+### §8.2 Default tier in v0
+
+For this draft, **all fields defined by this specification are `experimental`** unless explicitly marked otherwise. The first `MAJOR ≥ 1` release will mark the foundational set as `stable`. Consumers using v0 SHOULD plan for minor-version churn.
+
+### §8.3 How fields declare their stability
+
+In the JSON Schema, a field's stability tier is declared in its `description` text using the convention:
+
+    Stability: stable | experimental | deprecated [— <notes>]
+
+Where `<notes>` MAY include a successor reference (`see x.y.z`), a deprecation rationale, or expected-change scope. Fields without an explicit annotation default to the version's default tier (`experimental` while `MAJOR` is `0`; `stable` after).
+
+A future minor version of the JSON Schema will surface stability via a structured custom keyword (e.g., `x-dim-stability`) so that tooling can read it without parsing prose. The `description`-prefix convention is the v0 placeholder.
+
+### §8.4 Promotion and demotion
+
+A field MAY be promoted from `experimental` to `stable` in any minor version. Promotion is non-breaking by definition.
+
+A field MAY be demoted from `stable` to `deprecated` in any minor version. Demotion is non-breaking; the field continues to validate. Removal of a deprecated field requires a major version bump (§6.5).
+
+A field MUST NOT move from `experimental` to `deprecated` without an intervening promotion to `stable` or a major version bump. (Rationale: producers should not be punished for using a field the spec said was experimental; the path to removal goes through stable.)
+
+---
+
 ## Open issues
 
 The following are deliberately deferred from this version of the specification:
@@ -230,11 +382,11 @@ The following are deliberately deferred from this version of the specification:
 - **DIM levels** (L0–L3) — a tiered conformance model analogous to SLSA build levels.
 - **Authoring guide** — practical guidance for producers on what to populate per attribute and how to write honest summaries.
 - **Verification guide** — practical guidance for consumers on how to evaluate a DIM in different decision contexts.
-- **Lifecycle policy** — re-issuance, revocation, deprecation.
-- **Vendor extension namespace** — the `x-*` key convention referenced in §5.1.12.
-- **Stability annotations** per field — `stable | experimental | deprecated`.
+- **Lifecycle policy** — re-issuance, revocation, supersession.
+- **Schema implementation of §7** — adding `patternProperties: { "^x-": {} }` to the objects listed in §7.2.
+- **Schema implementation of §8** — annotating each field's `description` with its stability tier, and introducing an `x-dim-stability` keyword.
 - **Canonical-strings registry** — managed list of approved spellings for `industryRefs.standard` values.
 - **Tension identifier registry** — the registry referenced in §5.1.11.
-- **Conformance test suite** — corpus of known-good and known-bad manifests with expected validator outputs.
+- **Conformance test suite** — corpus of known-good and known-bad manifests with expected validator outputs, including positive and negative cases for each conformance item in §5.1.
 
-These will be addressed in subsequent iterations of this specification once §§1–5 stabilize.
+These will be addressed in subsequent iterations of this specification once §§1–8 stabilize.

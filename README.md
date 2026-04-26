@@ -8,7 +8,7 @@ SBOM tells you what's inside the artifact. SLSA tells you how it was built. Open
 
 This is the v0 schema.
 
-> **Normative reference.** The [SPECIFICATION.md](SPECIFICATION.md) document is the normative source for what a conforming DIM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–5 of the specification (Scope, Terminology, Conformance language, Threat model, Definition of a conforming DIM) are written. §§6+ (DIM levels, authoring guide, verification guide, lifecycle policy) are deferred.
+> **Normative reference.** The [SPECIFICATION.md](SPECIFICATION.md) document is the normative source for what a conforming DIM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–8 of the specification (Scope, Terminology, Conformance language, Threat model, Definition of a conforming DIM, Versioning, Extensibility, Stability) are written. DIM levels (L0–L3), authoring guide, verification guide, and lifecycle policy are deferred.
 
 > **Note on the namespace.** The schema's `$id` (`https://quality-software.dev/...`) is a placeholder. For DIM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group), not a personal domain. Treat the current `$id` as draft.
 
@@ -171,9 +171,10 @@ v0.1 — draft. Breaking changes expected. The goal of v0 is to get the field se
 
 ### Planned for v0.2 / next sessions
 
-- **Narrative specification §§6+** — DIM levels (L0 = no manifest, L1 = declared-only, L2 = with `industryRefs`, L3 = verified with evidence), authoring guide, verification guide, lifecycle policy. (§§1–5 are now written in [SPECIFICATION.md](SPECIFICATION.md).)
-- **Vendor extension namespace.** Allow `x-<vendor>-<key>` keys on extension-point objects (`qualityAttributes`, `extensions`, `qualityAttributeClaim`) following the CycloneDX / OpenAPI pattern.
-- **Stability annotations** per field (stable / experimental / deprecated) to make the maintainability path explicit.
-- **Canonical-strings registry** for `industryRefs.standard` to reduce citation drift.
-- **Conformance test suite** — a corpus of known-good and known-bad manifests with expected validator outputs.
+- **Narrative continuation** — DIM levels (L0 = no manifest, L1 = declared-only, L2 = with `industryRefs`, L3 = verified with evidence), authoring guide, verification guide, lifecycle policy. (§§1–8 written in [SPECIFICATION.md](SPECIFICATION.md): scope, terminology, conformance language, threat model, conforming-DIM definition, versioning, extensibility, stability.)
+- **Schema implementation of §7 (extensibility).** Add `patternProperties: { "^x-": {} }` to the objects §7.2 permits (`qualityAttributeClaim`, `qualityAttributes` characteristic objects, `extensions` entries, `tensionsDeclared[]`, `industryRefs[]`, `evidence[]`, `producer`, `subject.components[]`). Policy is normative now; schema implementation lands in v0.2.
+- **Schema implementation of §8 (stability).** Annotate each field's `description` with its stability tier; introduce an `x-dim-stability` structured keyword for tooling.
+- **Canonical-strings registry** for `industryRefs.standard` to reduce citation drift (SPDX License List pattern).
+- **Tension identifier registry** for `tensionsDeclared[].tension` well-known IDs (referenced by §5.1.11).
+- **Conformance test suite** — a corpus of known-good and known-bad manifests with expected validator outputs, with positive and negative cases for each conformance item in §5.1.
 - **Anchor-gap closures** flagged by the citations audit: `extensions.contextWindowManagement` → OWASP LLM Top 10 / NIST AI RMF; `envelope.privilege` + `envelope.network` → CIS Benchmarks / NIST SP 800-190; `extensions.dataLifecycle` deletion side → NIST SP 800-88 Rev. 1.
