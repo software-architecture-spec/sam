@@ -1,0 +1,421 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quality-software.dev/schemas/design-intent-manifest/v0.json",
+  "title": "Design Intent Manifest",
+  "description": "Producer-signed declaration of what a software artifact was designed to do and the operational envelope it was designed for. Companion to SBOM (what's inside) and SLSA (how it was built). Predicate-only: signing happens via DSSE/sigstore wrapping this document.",
+  "type": "object",
+  "required": ["manifestVersion", "subject", "intent", "envelope", "qualityAttributes", "producer"],
+  "additionalProperties": false,
+  "properties": {
+    "manifestVersion": {
+      "const": "0.1",
+      "description": "Schema version. Bump on breaking changes."
+    },
+    "subject": {
+      "type": "object",
+      "description": "What this manifest describes. Use 'layer' to declare granularity: an artifact (one container image / binary / package — SBOM/signing granularity), a service (a logical SLO-owning unit of 1+ artifacts), or a product (the contractual surface, often many services). Different audiences read different layers. Composition between layers is explicit via 'components'.",
+      "required": ["layer", "name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "layer": {
+          "enum": ["artifact", "service", "product"],
+          "description": "artifact: one signed deployable (container image, binary, package). Required to carry a digest. Audience: AI agents, build/SLSA, SBOM tooling. service: a logical SLO-owning unit. Audience: SRE, on-call, ops. product: the contractual/customer-facing surface. Audience: procurement, audit, customers."
+        },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "digest": {
+          "type": "object",
+          "description": "Content-addressed digest. Required when layer=artifact. Optional at service/product layers (which have no single content-addressed blob). At least one algorithm when present.",
+          "minProperties": 1,
+          "patternProperties": {
+            "^(sha256|sha512|sha3-256|sha3-512)$": { "type": "string", "pattern": "^[a-f0-9]+$" }
+          },
+          "additionalProperties": false
+        },
+        "sbomRef": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional pointer to an SBOM (CycloneDX or SPDX). The two manifests are complementary."
+        },
+        "components": {
+          "type": "array",
+          "description": "For service-layer or product-layer manifests: the constituent lower-layer subjects, each referencing its own DIM. Composition is explicit; no implicit nesting.",
+          "items": {
+            "type": "object",
+            "required": ["layer", "name", "version"],
+            "additionalProperties": false,
+            "properties": {
+              "layer": { "enum": ["artifact", "service"] },
+              "name": { "type": "string" },
+              "version": { "type": "string" },
+              "digest": {
+                "type": "object",
+                "minProperties": 1,
+                "patternProperties": {
+                  "^(sha256|sha512|sha3-256|sha3-512)$": { "type": "string", "pattern": "^[a-f0-9]+$" }
+                },
+                "additionalProperties": false
+              },
+              "manifestUri": {
+                "type": "string",
+                "format": "uri",
+                "description": "URI to the constituent's signed DIM, if available."
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "layer": { "const": "artifact" } }, "required": ["layer"] },
+          "then": { "required": ["digest"] }
+        }
+      ]
+    },
+    "intent": {
+      "type": "object",
+      "required": ["purpose", "audience", "tenancy"],
+      "additionalProperties": false,
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "description": "Free-text statement of what this software is for. One paragraph max."
+        },
+        "audience": {
+          "enum": ["single_user", "multi_user_single_org", "multi_tenant"],
+          "description": "Who the software was designed to serve. single_user: one person, one install. multi_user_single_org: multiple users sharing one logical instance. multi_tenant: isolation between distinct customer/tenant boundaries is a design property."
+        },
+        "tenancy": {
+          "type": "object",
+          "required": ["model"],
+          "additionalProperties": false,
+          "properties": {
+            "model": {
+              "enum": ["none", "shared", "siloed", "hybrid"],
+              "description": "none: no tenant concept. shared: tenants share data plane with logical separation. siloed: each tenant gets dedicated data plane. hybrid: declared per-resource."
+            },
+            "isolationGuarantees": {
+              "type": "array",
+              "items": { "enum": ["data", "compute", "network", "identity", "encryption_keys"] },
+              "description": "Which dimensions are isolated between tenants in shared/hybrid models."
+            }
+          }
+        },
+        "outOfScope": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Explicit non-goals. What the software was NOT designed to do. Saying this prevents misuse downstream."
+        }
+      }
+    },
+    "envelope": {
+      "type": "object",
+      "description": "The operational envelope the producer designed for. Outside this envelope, behavior is undefined.",
+      "required": ["throughput", "scaling", "instantiation", "privilege", "network"],
+      "additionalProperties": false,
+      "properties": {
+        "throughput": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "targetRps": { "type": "number", "minimum": 0, "description": "Designed-for requests per second per instance." },
+            "maxRps": { "type": "number", "minimum": 0, "description": "Hard ceiling. Above this, the producer makes no guarantees." },
+            "latency": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "p50Ms": { "type": "number", "minimum": 0 },
+                "p95Ms": { "type": "number", "minimum": 0 },
+                "p99Ms": { "type": "number", "minimum": 0 }
+              }
+            },
+            "concurrency": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "maxConcurrentRequests": { "type": "integer", "minimum": 0 },
+                "maxConcurrentUsers": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "scaling": {
+          "type": "object",
+          "required": ["axis"],
+          "additionalProperties": false,
+          "properties": {
+            "axis": {
+              "enum": ["horizontal", "vertical", "both", "none"],
+              "description": "How the producer designed for growth. 'none' means single-instance only — there is no scaling path."
+            },
+            "stateful": {
+              "type": "boolean",
+              "description": "Whether instances hold state that prevents horizontal replication without coordination."
+            },
+            "maxInstances": { "type": "integer", "minimum": 1 },
+            "verticalCeiling": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "cpuCores": { "type": "number", "minimum": 0 },
+                "memoryGiB": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "instantiation": {
+          "type": "object",
+          "required": ["mode"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "enum": ["singleton", "multi_instance", "leader_elected", "sharded"],
+              "description": "singleton: exactly one instance must run. multi_instance: independent replicas. leader_elected: many run, one is active. sharded: many run, each owns a partition."
+            },
+            "coordinationDependency": {
+              "type": "string",
+              "description": "External dependency required for coordination (e.g., 'postgres advisory locks', 'etcd', 'none')."
+            }
+          }
+        },
+        "privilege": {
+          "type": "object",
+          "required": ["runtime"],
+          "additionalProperties": false,
+          "properties": {
+            "runtime": {
+              "enum": ["root_required", "privileged", "unprivileged", "capability_scoped"],
+              "description": "What privilege level the producer designed the artifact to run at."
+            },
+            "linuxCapabilities": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^CAP_[A-Z_]+$" },
+              "description": "Required Linux capabilities when runtime=capability_scoped."
+            },
+            "filesystemAccess": {
+              "enum": ["none", "read_only", "scoped_write", "full"],
+              "description": "Designed filesystem access posture."
+            }
+          }
+        },
+        "network": {
+          "type": "object",
+          "required": ["posture"],
+          "additionalProperties": false,
+          "properties": {
+            "posture": {
+              "enum": ["isolated", "egress_only", "ingress_only", "bidirectional"],
+              "description": "isolated: works air-gapped, no network needed. egress_only: outbound calls required. ingress_only: serves traffic, no outbound. bidirectional: both."
+            },
+            "requiredEgress": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["host", "purpose"],
+                "additionalProperties": false,
+                "properties": {
+                  "host": { "type": "string" },
+                  "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                  "protocol": { "enum": ["http", "https", "grpc", "tcp", "udp", "other"] },
+                  "purpose": { "type": "string" }
+                }
+              }
+            },
+            "exposedPorts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["port", "protocol"],
+                "additionalProperties": false,
+                "properties": {
+                  "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+                  "protocol": { "enum": ["http", "https", "grpc", "tcp", "udp"] },
+                  "purpose": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "persistence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required": { "type": "boolean" },
+            "stores": {
+              "type": "array",
+              "items": { "enum": ["sql", "kv", "document", "blob", "search", "queue", "filesystem", "other"] }
+            }
+          }
+        }
+      }
+    },
+    "qualityAttributes": {
+      "type": "object",
+      "description": "Producer claims per ISO/IEC 25010:2023 characteristic and sub-characteristic. Each claim has status (unspecified|declared|verified|not_applicable) and optional evidence. Use industryRefs[] for normative anchors (the auditor surface) and informationalRefs[] for non-normative design-context pointers (pattern catalogs, knowledge bases, AI-prompt sources).",
+      "additionalProperties": false,
+      "properties": {
+        "functionalSuitability": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "Degree to which the product provides functions that meet stated and implied needs. Sub-characteristics: completeness, correctness, appropriateness."
+        },
+        "performanceEfficiency": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "Performance relative to resources used. Sub-characteristics: timeBehaviour, resourceUtilization, capacity."
+        },
+        "compatibility": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "Ability to share information and perform required functions while sharing the same environment. Sub-characteristics: coExistence, interoperability."
+        },
+        "interactionCapability": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "ISO 25010:2023 renamed Usability. Sub-characteristics: appropriatenessRecognizability, learnability, operability, userErrorProtection, userEngagement, inclusivity (accessibility lives here), userAssistance, selfDescriptiveness."
+        },
+        "reliability": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "Sub-characteristics: faultTolerance, recoverability, availability, maturity."
+        },
+        "security": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "Sub-characteristics: confidentiality, integrity, nonRepudiation, accountability, authenticity, resistance."
+        },
+        "maintainability": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "Sub-characteristics: modularity, reusability, analysability, modifiability, testability."
+        },
+        "flexibility": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "ISO 25010:2023 expanded Portability. Sub-characteristics: adaptability, scalability, installability, replaceability."
+        },
+        "safety": {
+          "$ref": "#/$defs/iso25010Characteristic",
+          "description": "ISO 25010:2023 new top-level. Sub-characteristics: operationalConstraint, riskIdentification, failSafe, hazardWarning, safeIntegration."
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Quality concerns not cleanly modeled by ISO 25010:2023. Observability folds awkwardly under maintainability.analysability in the standard; data lifecycle and AI-era concerns have no formal home.",
+      "additionalProperties": false,
+      "properties": {
+        "observability": {
+          "$ref": "#/$defs/qualityAttributeClaim",
+          "description": "Structured logging, metrics, distributed tracing, health endpoints. The producer's claim about what is observable in production."
+        },
+        "dataLifecycle": {
+          "$ref": "#/$defs/qualityAttributeClaim",
+          "description": "Retention, deletion, archival, right-to-deletion compliance. Distinct from security.confidentiality."
+        },
+        "internationalization": {
+          "$ref": "#/$defs/qualityAttributeClaim",
+          "description": "Locale support, string externalization, RTL, CLDR pluralization. Adjacent to interactionCapability.inclusivity but operationally distinct."
+        },
+        "contextWindowManagement": {
+          "$ref": "#/$defs/qualityAttributeClaim",
+          "description": "AI-era concern. Pattern catalog, ADRs, exemplar density. The producer's claim about how a downstream AI agent can navigate this codebase coherently."
+        }
+      }
+    },
+    "tensionsDeclared": {
+      "type": "array",
+      "description": "For each declared tension between branches, which posture did the producer choose?",
+      "items": {
+        "type": "object",
+        "required": ["tension", "posture"],
+        "additionalProperties": false,
+        "properties": {
+          "tension": {
+            "enum": [
+              "cap_pacelc",
+              "observability_cost_trilemma",
+              "test_suite_tension",
+              "observability_pii",
+              "security_performance_isolation"
+            ]
+          },
+          "posture": { "type": "string", "description": "The chosen posture and what was sacrificed (e.g., 'AP, staleness window 5s', 'CP, availability sacrificed during partition')." },
+          "rationale": { "type": "string" }
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "required": ["name", "issuedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "description": "OSS maintainer or producing organization." },
+        "contact": { "type": "string", "format": "email" },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "validFor": { "type": "string", "description": "ISO 8601 duration. Manifest expires after this from issuedAt. Producers re-sign on each release.", "pattern": "^P" }
+      }
+    }
+  },
+  "$defs": {
+    "iso25010Characteristic": {
+      "type": "object",
+      "description": "An ISO/IEC 25010:2023 characteristic. The characteristic itself carries an aggregate claim; sub-characteristics carry the granular claims. Producers may populate either or both — a single overall claim is acceptable for v0.",
+      "additionalProperties": false,
+      "properties": {
+        "overall": {
+          "$ref": "#/$defs/qualityAttributeClaim",
+          "description": "Aggregate claim for the characteristic as a whole."
+        },
+        "subCharacteristics": {
+          "type": "object",
+          "description": "ISO 25010:2023 sub-characteristics for this characteristic. Keys must be camelCase ISO sub-characteristic names. Validators may choose to enforce per-characteristic enum constraints; v0 accepts any string key matching the standard.",
+          "additionalProperties": { "$ref": "#/$defs/qualityAttributeClaim" }
+        }
+      }
+    },
+    "qualityAttributeClaim": {
+      "type": "object",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": ["unspecified", "declared", "verified", "not_applicable"],
+          "description": "unspecified: producer makes no claim. declared: producer asserts but provides no evidence. verified: producer asserts and points to evidence. not_applicable: producer claims this attribute is irrelevant for this artifact."
+        },
+        "summary": { "type": "string", "description": "Plain-language statement of the claim. Required when status is declared or verified." },
+        "evidence": {
+          "type": "array",
+          "description": "Evidence URIs. Required when status=verified. Examples: load test report, security scan, accessibility audit, CI run.",
+          "items": {
+            "type": "object",
+            "required": ["type", "uri"],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "enum": ["load_test", "security_scan", "fuzz_run", "accessibility_audit", "chaos_test", "ci_run", "spec_test", "manual_review", "other"]
+              },
+              "uri": { "type": "string", "format": "uri" },
+              "digest": { "type": "string", "description": "Content hash of the evidence artifact, if archived." }
+            }
+          }
+        },
+        "industryRefs": {
+          "type": "array",
+          "description": "Normative cross-references to industry standards or specifications relevant to this claim (e.g., WCAG 2.2 AA, OWASP ASVS L2, NIST SP 800-218). These are what auditors and procurement teams look for; they are first-class on the manifest because they outlive any single host or vendor.",
+          "items": {
+            "type": "object",
+            "required": ["standard"],
+            "additionalProperties": false,
+            "properties": {
+              "standard": {
+                "type": "string",
+                "description": "Identifier of the standard or spec. Examples: 'ISO/IEC 25010', 'ISO/IEC 27001', 'NIST SP 800-218', 'OWASP ASVS', 'WCAG', 'OpenTelemetry', 'OpenAPI', 'AsyncAPI', 'SLSA', 'ISO 26262', 'IEC 62304', 'GDPR', 'SOC 2', 'HIPAA', 'PCI DSS'."
+              },
+              "version": { "type": "string", "description": "Version of the standard (e.g., '2023', '2.2', '5.0', '3.1.0', 'v1.1')." },
+              "conformance": { "type": "string", "description": "Optional conformance level or profile (e.g., 'AA' for WCAG, 'L2' for ASVS, 'Tier 3' for SLSA, 'Type II' for SOC 2). Free text — varies per standard." },
+              "referenceUri": { "type": "string", "format": "uri", "description": "Optional canonical URI for the standard or section being referenced." }
+            }
+          }
+        },
+        "informationalRefs": {
+          "type": "array",
+          "description": "Non-normative pointers to additional context — pattern catalogs, design references, internal docs, or external knowledge bases that aided the producer's reasoning. Useful for AI agents and humans who want to drill into the design rationale, but not anchors an auditor relies on. Example: a Banyan trunk branch ID for AI prompt context.",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
