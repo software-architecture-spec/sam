@@ -10,7 +10,7 @@
 set -euo pipefail
 
 # Only run if relevant files are staged
-relevant_pattern='^(sam/|registry/|tools/validate\.py|\.github/workflows/validate\.yml)'
+relevant_pattern='^(v0.1/|registry/|tools/validate\.py|\.github/workflows/validate\.yml)'
 if ! git diff --cached --name-only --diff-filter=ACMR | grep -qE "$relevant_pattern"; then
     exit 0
 fi

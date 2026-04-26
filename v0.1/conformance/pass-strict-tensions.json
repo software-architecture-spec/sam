@@ -1,5 +1,5 @@
 {
-  "manifestVersion": "0.2",
+  "manifestVersion": "0.1",
   "subject": {
     "layer": "artifact",
     "name": "test-subject",

@@ -49,7 +49,7 @@ def fail(label: str, detail: str) -> None:
 def check_schema_versions() -> None:
     """Each version's schema validates against the JSON Schema 2020-12 metaschema."""
     global checks_run
-    for version_dir in sorted((REPO / "sam").glob("v*/")):
+    for version_dir in sorted(REPO.glob("v*/")):
         schema_path = version_dir / "schema.json"
         if not schema_path.exists():
             continue
@@ -65,7 +65,7 @@ def check_schema_versions() -> None:
 def check_examples() -> None:
     """Every version's examples validate against that version's schema."""
     global checks_run
-    for version_dir in sorted((REPO / "sam").glob("v*/")):
+    for version_dir in sorted(REPO.glob("v*/")):
         schema_path = version_dir / "schema.json"
         ex_dir = version_dir / "examples"
         if not (schema_path.exists() and ex_dir.is_dir()):
@@ -94,7 +94,7 @@ def check_examples() -> None:
 def check_conformance_corpus() -> None:
     """Run each conformance case and confirm actual outcome matches expected."""
     global checks_run
-    for version_dir in sorted((REPO / "sam").glob("v*/")):
+    for version_dir in sorted(REPO.glob("v*/")):
         conf_dir = version_dir / "conformance"
         idx_path = conf_dir / "manifest.json"
         schema_path = version_dir / "schema.json"

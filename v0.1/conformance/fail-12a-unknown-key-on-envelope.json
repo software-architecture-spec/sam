@@ -1,5 +1,5 @@
 {
-  "manifestVersion": "0.2",
+  "manifestVersion": "0.1",
   "subject": {
     "layer": "artifact",
     "name": "test-subject",
@@ -28,16 +28,10 @@
     },
     "network": {
       "posture": "isolated"
-    }
+    },
+    "customField": "not allowed"
   },
-  "qualityAttributes": {
-    "performanceEfficiency": {
-      "overall": {
-        "status": "verified",
-        "summary": "Claimed verified but no evidence."
-      }
-    }
-  },
+  "qualityAttributes": {},
   "producer": {
     "name": "Test Producer",
     "issuedAt": "2026-04-26T15:00:00Z"

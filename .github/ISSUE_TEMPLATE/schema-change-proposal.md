@@ -7,7 +7,7 @@ labels: ["schema", "proposal"]
 
 <!--
 For non-trivial schema changes, file the issue first; PRs land after discussion converges.
-Please read sam/v0.2/SPECIFICATION.md before submitting — many concerns are already addressed.
+Please read v0.1/SPECIFICATION.md before submitting — many concerns are already addressed.
 -->
 
 ## Problem
@@ -28,7 +28,7 @@ Which conformance items does this change touch? Does it create a new conformance
 
 ## Backward compatibility
 
-Does this change break existing v0.1 or v0.2 manifests? If so, what's the migration path? Per §6.1, breaking changes are permitted in v0.x but they should be deliberate and named.
+Does this change break existing v0.1 manifests? If so, what's the migration path? Per §6.1, breaking changes are permitted in v0.x but they should be deliberate and named.
 
 ## Anchored standards
 

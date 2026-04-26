@@ -1,13 +1,17 @@
 {
-  "manifestVersion": "0.2",
+  "manifestVersion": "0.1",
   "subject": {
-    "layer": "artifact",
-    "name": "test-subject",
-    "version": "1.0.0",
-    "digest": {
-      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
-    },
-    "sbomRef": "not a uri"
+    "layer": "product",
+    "name": "test-product",
+    "version": "3.0.0",
+    "components": [
+      {
+        "layer": "service",
+        "name": "test-product-svc",
+        "version": "3.0.0",
+        "manifestUri": "https://example.com/sam.json"
+      }
+    ]
   },
   "intent": {
     "purpose": "Conformance corpus test fixture.",

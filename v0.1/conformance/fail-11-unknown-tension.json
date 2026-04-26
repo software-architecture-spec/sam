@@ -1,5 +1,5 @@
 {
-  "manifestVersion": "0.2",
+  "manifestVersion": "0.1",
   "subject": {
     "layer": "artifact",
     "name": "test-subject",
@@ -33,6 +33,12 @@
   "qualityAttributes": {},
   "producer": {
     "name": "Test Producer",
-    "issuedAt": "yesterday"
-  }
+    "issuedAt": "2026-04-26T15:00:00Z"
+  },
+  "tensionsDeclared": [
+    {
+      "tension": "made_up_tension",
+      "posture": "whatever"
+    }
+  ]
 }

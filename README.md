@@ -10,11 +10,11 @@ SBOM tells you what's inside the software. SLSA tells you how it was built. Open
 
 > **Working draft — not adoption-ready.** SAM is a v0 working proposal. Breaking changes are still possible (per `SPECIFICATION.md §6.1`); the stable target is v1. We are publishing this draft to gather technical review and contributors, *not* to declare a finished standard. If you operate SAMs in production today, you are early — please file feedback. **What we're asking for:** technical review of the schema and spec from supply-chain, security, and procurement practitioners; real-world authoring feedback (what's hard, what's missing); citations and registry contributions; implementations of the spec-aware validator surface (§5.1.6, §5.1.7, §5.1.9, §5.1.11). See [CONTRIBUTING.md](CONTRIBUTING.md), [ROADMAP.md](ROADMAP.md), and the [issue templates](https://github.com/software-architecture-spec/software-architecture-spec.github.io/issues/new/choose).
 
-The current version is **v0.2**. v0.1 is frozen — see [`sam/v0.1/SPECIFICATION.md`](sam/v0.1/SPECIFICATION.md) — and remains accessible at its URIs (per `SPECIFICATION.md §6.3`, same-MAJOR backward compatibility).
+The current (and only) version is **v0.1** — the first public draft. See [`v0.1/SPECIFICATION.md`](v0.1/SPECIFICATION.md). Future versions land alongside (v0.2, v0.3, …) at frozen URIs per `SPECIFICATION.md §6.3`.
 
-> **Normative reference.** The [SPECIFICATION.md](sam/v0.2/SPECIFICATION.md) document is the normative source for what a conforming SAM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–9 are written: Scope, Terminology, Conformance language, Threat model, Definition of a conforming SAM, Versioning, Extensibility, Stability, **SAM Levels (L0–L3)**. Authoring guide, verification guide, and lifecycle policy are deferred.
+> **Normative reference.** The [SPECIFICATION.md](v0.1/SPECIFICATION.md) document is the normative source for what a conforming SAM is and means. The JSON Schema in this repo is the syntactic form; the specification defines what conformance to that form requires. §§1–9 are written: Scope, Terminology, Conformance language, Threat model, Definition of a conforming SAM, Versioning, Extensibility, Stability, **SAM Levels (L0–L3)**. Authoring guide, verification guide, and lifecycle policy are deferred.
 
-> **Note on the namespace.** The schema's `$id` (`https://software-architecture-spec.github.io/sam/v0.2/schema.json`) is hosted on GitHub Pages under the `software-architecture-spec` org. For SAM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group). The current host is appropriate for a working draft; URIs will redirect when the namespace moves.
+> **Note on the namespace.** The schema's `$id` (`https://software-architecture-spec.github.io/sam/v0.1/schema.json`) is hosted on GitHub Pages. For SAM to become a useful cross-vendor standard, the namespace should eventually live with a neutral host (e.g., a CNCF / OpenSSF / IETF working group). The current host is appropriate for a working draft; URIs will redirect when the namespace moves.
 
 ---
 
@@ -38,7 +38,7 @@ SAM restores that signal. A manifest that honestly declares `audience: single_us
 - A **legal contract** or **service-level agreement**. SAM carries no automatic legal weight; a separate contract may incorporate SAM claims by reference.
 - A **substitute for testing or due diligence**. Evidence URIs reference verification artifacts; reading a SAM does not relieve the consumer of evaluating the producer's claims against their own risk tolerance.
 
-The full normative scope is in [`SPECIFICATION.md §1`](sam/v0.2/SPECIFICATION.md).
+The full normative scope is in [`SPECIFICATION.md §1`](v0.1/SPECIFICATION.md).
 
 ---
 
@@ -54,7 +54,7 @@ The same questions ("how does it scale", "what privilege does it run with", "is 
 
 A small project may only need one SAM at the `artifact` layer. A real product typically has all three, with each layer's manifest referencing its constituents via `subject.components[]`. Composition is explicit; nothing is inferred.
 
-## Levels — how much a manifest tells you (new in v0.2)
+## Levels — how much a manifest tells you
 
 A SAM is either conforming or it isn't. But producers and consumers also need a vocabulary for how *much* a SAM tells them. SAM Levels (`SPECIFICATION.md §9`) define four tiers:
 
@@ -67,11 +67,11 @@ A SAM is either conforming or it isn't. But producers and consumers also need a 
 
 Levels are about *evaluability*, not *quality*. An L3 manifest declaring "P95 latency is 30 seconds" is L3-conforming; whether 30 seconds is acceptable is a consumer judgment outside SAM's scope.
 
-## Structure (v0.2)
+## Structure
 
 ```
 manifest
-├── manifestVersion          schema version (v0.2)
+├── manifestVersion          schema version (v0.1)
 ├── subject                  what this manifest describes
 │   ├── layer                artifact | service | product (granularity declaration)
 │   ├── name, version
@@ -166,7 +166,7 @@ The manifest is a **predicate** — the statement of intent. Signing wraps it in
 {
   "_type": "https://in-toto.io/Statement/v1",
   "subject": [{ "name": "metrics-dashboard-api", "digest": { "sha256": "..." } }],
-  "predicateType": "https://software-architecture-spec.github.io/sam/v0.2",
+  "predicateType": "https://software-architecture-spec.github.io/sam/v0.1",
   "predicate": { ...the manifest body... }
 }
 ```
@@ -177,23 +177,21 @@ This means cosign, sigstore, and any in-toto-aware tooling can sign and verify S
 
 ## Files
 
-### v0.2 (current)
+### Versioned (`v0.1/` — current)
 
-- `sam/v0.2/SPECIFICATION.md` — the normative specification (§§1–9)
-- `sam/v0.2/schema.json` — the JSON Schema (Draft 2020-12)
-- `sam/v0.2/examples/saas.manifest.json` — multi-tenant SaaS API (public-cloud shape)
-- `sam/v0.2/examples/internal-enterprise.manifest.json` — internal employee-onboarding portal (corporate-internal shape: SSO, no public exposure, regulatory retention, WCAG 2.2 AA)
-- `sam/v0.2/conformance/` — test corpus indexed by `manifest.json`; 8 positive cases, 12 negative cases, README with run instructions.
+- [`v0.1/SPECIFICATION.md`](v0.1/SPECIFICATION.md) — the normative specification (§§1–9)
+- [`v0.1/schema.json`](v0.1/schema.json) — the JSON Schema (Draft 2020-12)
+- [`v0.1/examples/saas.manifest.json`](v0.1/examples/saas.manifest.json) — multi-tenant SaaS API (public-cloud shape)
+- [`v0.1/examples/internal-enterprise.manifest.json`](v0.1/examples/internal-enterprise.manifest.json) — internal employee-onboarding portal (corporate-internal shape: SSO, no public exposure, regulatory retention, WCAG 2.2 AA)
+- [`v0.1/conformance/`](v0.1/conformance/) — test corpus indexed by `manifest.json`; 8 positive cases, 12 negative cases, README with run instructions.
 
-### Companion registries
+Future versions land alongside (`v0.2/`, `v0.3/`, …) and don't disturb published v0.1 URIs.
 
-- `registry/standards.json` — canonical spellings for `industryRefs.standard` (SPDX List pattern; advisory)
-- `registry/tensions.json` — well-known IDs for `tensionsDeclared[].tension` (the five from §5.1.11)
-- `registry/README.md` — registry shape, versioning, and contribution model
+### Companion registries (`registry/` — versioned independently)
 
-### v0.1 (frozen)
-
-- [`sam/v0.1/SPECIFICATION.md`](sam/v0.1/SPECIFICATION.md), [`sam/v0.1/schema.json`](sam/v0.1/schema.json), and the v0.1 examples are preserved at their URIs; new manifests should use v0.2.
+- [`registry/standards.json`](registry/standards.json) — canonical spellings for `industryRefs.standard` (SPDX List pattern; advisory)
+- [`registry/tensions.json`](registry/tensions.json) — well-known IDs for `tensionsDeclared[].tension` (the five from §5.1.11)
+- [`registry/README.md`](registry/README.md) — registry shape, versioning, and contribution model
 
 ### Validation
 
@@ -217,16 +215,16 @@ The validator (`tools/validate.py`) is the canonical entry point. It runs in:
 For ad-hoc validation of a single example without the full corpus:
 
 ```sh
-check-jsonschema --schemafile sam/v0.2/schema.json sam/v0.2/examples/saas.manifest.json
+check-jsonschema --schemafile v0.1/schema.json v0.1/examples/saas.manifest.json
 ```
 
 ---
 
 ## Status
 
-v0.2 — draft. Breaking changes still possible while `MAJOR` is `0` (per `SPECIFICATION.md §6.1`). The goal of v0 is to get the field set right, not to lock the format. v0.2 is additive over v0.1 (no breaking changes); v0.1 manifests remain conforming under their own URIs.
+v0.1 — first public draft. Breaking changes still possible while `MAJOR` is `0` (per `SPECIFICATION.md §6.1`). The goal of v0 is to get the field set right, not to lock the format.
 
-### v0.2 conventions
+### v0.1 conventions
 
 - **`x-*` extensions permitted** on `qualityAttributeClaim`, `qualityAttributes` characteristic objects, `tensionsDeclared[]` items, `industryRefs[]` items, `evidence[]` items, `producer`, and `subject.components[]` items. Forbidden on the top-level manifest, `subject` root, `manifestVersion`, `intent` (and `tenancy`), `qualityAttributes` parent, and all of `envelope`'s sub-blocks. See `SPECIFICATION.md §7`.
 - **Stability annotations** on every field's `description` (`Stability: stable | experimental`) plus an `x-sam-stability` keyword on stable fields. See `SPECIFICATION.md §8`.
@@ -242,7 +240,7 @@ v0.2 — draft. Breaking changes still possible while `MAJOR` is `0` (per `SPECI
 - Whether to add a `lifecycle` section (active, maintenance, deprecated, abandoned) or leave that to package metadata.
 - Subject-aware DSSE binding for non-artifact layers — service- and product-layer manifests have optional `subject.digest`; binding them to a subject identifier without a digest is currently underspecified.
 
-### Planned beyond v0.2
+### Planned beyond v0.1
 
 - **Authoring guide** — practical guidance for producers on what to populate per attribute and how to write honest summaries.
 - **Verification guide** — practical guidance for consumers on how to evaluate a SAM in different decision contexts.

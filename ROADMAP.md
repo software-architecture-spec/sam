@@ -4,9 +4,9 @@ This roadmap is **feedback-driven, not predetermined**. Everything below shifts 
 
 The stable target is **v1**. The path there is incremental minor releases that close gaps surfaced by real use.
 
-## Current release: v0.2
+## Current release: v0.1
 
-Shipped 2026-04-26 at `https://software-architecture-spec.github.io/sam/v0.2/`.
+First public draft. Live at `https://software-architecture-spec.github.io/sam/v0.1/`.
 
 - Specification §§1–9 (Scope, Terminology, Conformance language, Threat model, Conforming SAM, Versioning, Extensibility, Stability, SAM Levels)
 - JSON Schema with §7 extensibility (`patternProperties` for `x-*`) and §8 stability annotations
@@ -15,11 +15,11 @@ Shipped 2026-04-26 at `https://software-architecture-spec.github.io/sam/v0.2/`.
 - Validator + CI + opt-in pre-commit hook
 - `registry/standards.json` (22 entries) and `registry/tensions.json` (5 well-known IDs)
 
-v0.1 frozen at `/sam/v0.1/` and remains valid per §6.3 same-MAJOR compatibility.
+
 
 ## Near-term — v0.3 candidates
 
-These are likely to land next, **subject to feedback**. Each came from the consumer-side review of v0.2 examples that flagged gaps a procurement/security reviewer felt.
+These are likely to land next, **subject to feedback**. Each came from an early consumer-side review of the v0.1 examples that flagged gaps a procurement/security reviewer felt.
 
 ### `envelope.serviceLevels` (service- and product-layer only)
 
@@ -50,9 +50,9 @@ Optional fields on each `industryRefs[]` entry:
 
 Closes the consumer-side gap that "SOC 2 Type 2" with no date / auditor / scope is procurement-useless.
 
-## Spec content still deferred from v0.2
+## Spec content deferred from v0.1
 
-These were named in v0.2's "Open issues" and remain on the path to v1:
+These were named in v0.1's "Open issues" and remain on the path to v1:
 
 - **Authoring guide** — practical guidance for producers on what to populate per attribute and how to write honest summaries.
 - **Verification guide** — practical guidance for consumers on how to evaluate a SAM in different decision contexts.
@@ -80,9 +80,9 @@ These are prose-heavy and depend on observed authoring patterns. They'll land on
 
 ## Open questions
 
-These came out of an early consumer-side review of v0.2 examples. Each is either a v0.3 candidate (above) or explicitly out of scope (below) — listed here so the reasoning is visible.
+These came out of an early consumer-side review of the v0.1 examples. Each is either a v0.3 candidate (above) or explicitly out of scope (below) — listed here so the reasoning is visible.
 
-- **Data residency of the subject itself.** v0.2 declares jurisdiction per dependency but not where the subject's own data lives. Consumer review flagged this as a critical DORA + GDPR Ch. V gap. *Resolution:* added as a v0.3 candidate at `intent.tenancy.dataResidency[]`.
+- **Data residency of the subject itself.** v0.1 declares jurisdiction per dependency but not where the subject's own data lives. Consumer review flagged this as a critical DORA + GDPR Ch. V gap. *Resolution:* added as a v0.3 candidate at `intent.tenancy.dataResidency[]`.
 - **Audit metadata on `industryRefs[]`.** A `SOC 2 Type 2` cite without auditor / period / date is procurement-useless. *Resolution:* v0.3 candidate.
 - **SLA / SLO surface.** Incident-response SLA, vulnerability-patch SLA, MTTR/MTBF, support hours, RPO/RTO are quality claims real consumers ask for. *Resolution:* v0.3 candidate at `envelope.serviceLevels` (service- and product-layer only).
 - **Subcontractor / nth-party chain per dependency.** DORA Art. 28 cares about sub-outsourcing. *Resolution:* **out of scope** — see below. SAM declares architectural facts; tracking each provider's own subcontractor chain is the consumer's compliance register, not the producer's manifest.

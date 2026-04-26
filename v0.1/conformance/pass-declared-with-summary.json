@@ -1,5 +1,5 @@
 {
-  "manifestVersion": "0.2",
+  "manifestVersion": "0.1",
   "subject": {
     "layer": "artifact",
     "name": "test-subject",
@@ -33,7 +33,8 @@
   "qualityAttributes": {
     "reliability": {
       "overall": {
-        "status": "declared"
+        "status": "declared",
+        "summary": "99.5% availability target."
       }
     }
   },

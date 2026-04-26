@@ -1,5 +1,5 @@
 {
-  "manifestVersion": "0.2",
+  "manifestVersion": "0.1",
   "subject": {
     "layer": "artifact",
     "name": "test-subject",
@@ -10,7 +10,7 @@
   },
   "intent": {
     "purpose": "Conformance corpus test fixture.",
-    "audience": "many",
+    "audience": "single_user",
     "tenancy": {
       "model": "none"
     }
@@ -30,7 +30,14 @@
       "posture": "isolated"
     }
   },
-  "qualityAttributes": {},
+  "qualityAttributes": {
+    "performanceEfficiency": {
+      "overall": {
+        "status": "verified",
+        "summary": "Claimed verified but no evidence."
+      }
+    }
+  },
   "producer": {
     "name": "Test Producer",
     "issuedAt": "2026-04-26T15:00:00Z"

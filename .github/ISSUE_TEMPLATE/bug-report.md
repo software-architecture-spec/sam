@@ -11,12 +11,11 @@ For security-related bugs, do NOT file here. See SECURITY.md for the private rep
 
 ## Affected file or section
 
-Path + line/section number. e.g., `sam/v0.2/schema.json` (qualityAttributeClaim.evidence), or `sam/v0.2/SPECIFICATION.md §5.1.6`.
+Path + line/section number. e.g., `v0.1/schema.json` (qualityAttributeClaim.evidence), or `v0.1/SPECIFICATION.md §5.1.6`.
 
 ## Affected version
 
-- [ ] `v0.1` (frozen)
-- [ ] `v0.2` (current)
+- [ ] `v0.1` (current)
 - [ ] working tree (`main` branch ahead of latest tagged)
 
 ## Expected behavior

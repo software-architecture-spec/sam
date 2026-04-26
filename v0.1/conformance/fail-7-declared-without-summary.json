@@ -1,9 +1,12 @@
 {
-  "manifestVersion": "0.2",
+  "manifestVersion": "0.1",
   "subject": {
     "layer": "artifact",
     "name": "test-subject",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "digest": {
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
   },
   "intent": {
     "purpose": "Conformance corpus test fixture.",
@@ -27,7 +30,13 @@
       "posture": "isolated"
     }
   },
-  "qualityAttributes": {},
+  "qualityAttributes": {
+    "reliability": {
+      "overall": {
+        "status": "declared"
+      }
+    }
+  },
   "producer": {
     "name": "Test Producer",
     "issuedAt": "2026-04-26T15:00:00Z"

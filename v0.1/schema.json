@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://software-architecture-spec.github.io/sam/v0.2/schema.json",
+  "$id": "https://software-architecture-spec.github.io/sam/v0.1/schema.json",
   "title": "Software Architecture Manifest",
   "description": "Stability: experimental. Producer-signed declaration of software's intended properties \u2014 its purpose, operational envelope, and quality attributes \u2014 for consumption by humans, AI agents, and automated tooling. Companion to SBOM (contents) and SLSA (build provenance); SAM declares what software was designed to be. Predicate-only: signing happens via DSSE/sigstore wrapping this document.",
   "type": "object",
@@ -15,7 +15,7 @@
   "additionalProperties": false,
   "properties": {
     "manifestVersion": {
-      "const": "0.2",
+      "const": "0.1",
       "description": "Stability: stable. Schema version. Bump on breaking changes.",
       "x-sam-stability": "stable"
     },
@@ -861,5 +861,5 @@
       }
     }
   },
-  "$comment": "x-sam-stability is a SAM-defined keyword (descriptive only, no validation behavior in v0.2). Tools MAY consume it to surface field maturity to consumers. Per JSON Schema 2020-12, unknown keywords are ignored by validators."
+  "$comment": "x-sam-stability is a SAM-defined keyword (descriptive only, no validation behavior in v0.1). Tools MAY consume it to surface field maturity to consumers. Per JSON Schema 2020-12, unknown keywords are ignored by validators."
 }

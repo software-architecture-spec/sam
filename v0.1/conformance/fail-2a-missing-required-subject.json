@@ -1,5 +1,5 @@
 {
-  "manifestVersion": "0.2",
+  "manifestVersion": "0.1",
   "intent": {
     "purpose": "Conformance corpus test fixture.",
     "audience": "single_user",

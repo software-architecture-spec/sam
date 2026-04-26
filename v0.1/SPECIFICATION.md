@@ -1,6 +1,6 @@
 # Software Architecture Manifest — Specification
 
-Version: 0.2 (draft)
+Version: 0.1 (draft)
 Status: Working draft. Breaking changes expected before v1.
 
 This document is the normative reference for the Software Architecture Manifest (SAM). The accompanying [JSON Schema](schema.json) is the syntactic form; this document defines what conformance to that form means and what claims a SAM is asserting when it is signed.
@@ -83,7 +83,7 @@ The following terms are used with the meanings given here throughout this specif
 - **Manifest** — A single SAM document.
 - **Manifest version** — The schema version a manifest claims to conform to, declared in `manifestVersion`.
 - **Predicate** — The manifest body when wrapped in an in-toto Statement for signing.
-- **Predicate type URI** — The canonical URI identifying the SAM predicate format and version, set in the in-toto Statement's `predicateType` field. For this version: `https://software-architecture-spec.github.io/sam/v0.2`.
+- **Predicate type URI** — The canonical URI identifying the SAM predicate format and version, set in the in-toto Statement's `predicateType` field. For this version: `https://software-architecture-spec.github.io/sam/v0.1`.
 - **Producer** — The party that issues and signs a SAM. Declared in `producer.name`.
 - **Consumer** — Any party that reads a SAM.
 - **Claim** — A single statement of fact made in a SAM (e.g., a quality attribute claim, a tension posture).
@@ -174,7 +174,7 @@ A SAM is **conforming** if all of the following hold:
 
 1. The document is well-formed JSON per [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259).
 2. The document validates against the JSON Schema published at the schema's `$id` for the declared `manifestVersion`.
-3. The document is signed via DSSE per the [in-toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) format, with `predicateType` equal to the canonical predicate type URI for the declared `manifestVersion` (for v0.1: `https://software-architecture-spec.github.io/sam/v0.2`).
+3. The document is signed via DSSE per the [in-toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) format, with `predicateType` equal to the canonical predicate type URI for the declared `manifestVersion` (for v0.1: `https://software-architecture-spec.github.io/sam/v0.1`).
 4. The DSSE signing key chain MUST be resolvable to an identity that asserts authority over the producer named in `producer.name`.
 5. When `subject.layer` is `artifact`, `subject.digest` MUST be present and bind the manifest to the artifact via the in-toto Statement `subject` field.
 6. When any `qualityAttributeClaim.status` is `verified`, at least one entry in `evidence[]` MUST be present for that claim.
@@ -247,7 +247,7 @@ SAM uses [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) (`MAJO
 The version a manifest claims to conform to is declared in the top-level `manifestVersion` field. The same version appears in:
 
 - The JSON Schema's `$id` path component (e.g., `.../v0.1.json`).
-- The in-toto predicate type URI (e.g., `https://software-architecture-spec.github.io/sam/v0.2`).
+- The in-toto predicate type URI (e.g., `https://software-architecture-spec.github.io/sam/v0.1`).
 
 These three values MUST agree for a given manifest.
 
@@ -272,7 +272,7 @@ The canonical predicate type URI for this specification is of the form:
 
     https://software-architecture-spec.github.io/sam/v<MAJOR>[.<MINOR>]
 
-For pre-1.0 working drafts, the URI includes the minor version (`v0.1`, `v0.2`). For stable versions (`MAJOR ≥ 1`), the URI includes only the major version (`v1`, `v2`); minor versions of a stable major share a single URI because they are backward compatible by §6.3.
+For pre-1.0 working drafts, the URI includes the minor version (`v0.1`, `v0.1`). For stable versions (`MAJOR ≥ 1`), the URI includes only the major version (`v1`, `v2`); minor versions of a stable major share a single URI because they are backward compatible by §6.3.
 
 A signing tool MUST NOT set `predicateType` to a URI different from the one declared in `manifestVersion`. A verifier MUST treat such a mismatch as an integrity failure.
 
@@ -321,7 +321,7 @@ Custom `x-*` keys MUST NOT appear on the following objects, where unknown fields
 - `manifestVersion`.
 - `intent`, `envelope`, and any of `envelope`'s sub-blocks (`throughput`, `scaling`, `instantiation`, `privilege`, `network`, `persistence`). Producers needing additional operational claims SHOULD use the `extensions` block instead.
 
-As of v0.2, the JSON Schema implements this policy: `patternProperties: { "^x-": {} }` is declared on each of the eight permitted objects above. Forbidden objects retain `additionalProperties: false`. Validators will reject `x-*` keys placed on forbidden objects (e.g., on `envelope.network`); validators will accept them on permitted objects without requiring schema knowledge of the specific key.
+As of v0.1, the JSON Schema implements this policy: `patternProperties: { "^x-": {} }` is declared on each of the eight permitted objects above. Forbidden objects retain `additionalProperties: false`. Validators will reject `x-*` keys placed on forbidden objects (e.g., on `envelope.network`); validators will accept them on permitted objects without requiring schema knowledge of the specific key.
 
 ### §7.3 What extensions may not do
 
@@ -369,7 +369,7 @@ In the JSON Schema, a field's stability tier is declared in its `description` te
 
 Where `<notes>` MAY include a successor reference (`see x.y.z`), a deprecation rationale, or expected-change scope. Fields without an explicit annotation default to the version's default tier (`experimental` while `MAJOR` is `0`; `stable` after).
 
-As of v0.2, the schema surfaces stability via two complementary mechanisms: every field's `description` is prefixed with `Stability: <tier>. ` for human readers, and the schema also attaches `x-sam-stability: "stable"` as a sibling of `description` on stable fields for tools that prefer a structured keyword. The `x-sam-stability` keyword is descriptive only — it has no validation behavior in v0.2, and Draft 2020-12 validators ignore it as an unknown keyword. A top-level `$comment` in the schema documents the keyword.
+As of v0.1, the schema surfaces stability via two complementary mechanisms: every field's `description` is prefixed with `Stability: <tier>. ` for human readers, and the schema also attaches `x-sam-stability: "stable"` as a sibling of `description` on stable fields for tools that prefer a structured keyword. The `x-sam-stability` keyword is descriptive only — it has no validation behavior in v0.1, and Draft 2020-12 validators ignore it as an unknown keyword. A top-level `$comment` in the schema documents the keyword.
 
 ### §8.4 Promotion and demotion
 
@@ -449,7 +449,7 @@ The following are deliberately deferred from this version of the specification:
 - **Authoring guide** — practical guidance for producers on what to populate per attribute and how to write honest summaries.
 - **Verification guide** — practical guidance for consumers on how to evaluate a SAM in different decision contexts.
 - **Lifecycle policy** — re-issuance, revocation, supersession.
-- **Tension identifier registry growth** — the v0.2 registry seeds the well-known set; longer-term curation, versioning, and contribution model still to define.
+- **Tension identifier registry growth** — the v0.1 registry seeds the well-known set; longer-term curation, versioning, and contribution model still to define.
 - **Canonical-strings registry growth** — same as above for `industryRefs.standard`.
 - **`x-sam-stability` validation behavior** — currently descriptive; future versions may give it semantics (e.g., consumers reject manifests that promise `stable` and use `experimental` fields).
 - **Subject-aware DSSE binding for non-artifact layers** — service- and product-layer manifests have optional `subject.digest`; binding them to a subject identifier without a digest is currently underspecified.

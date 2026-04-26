@@ -107,7 +107,89 @@
       "stores": [
         "sql"
       ]
-    }
+    },
+    "dependencies": [
+      {
+        "name": "Workday",
+        "type": "saas",
+        "criticality": "critical",
+        "failureMode": "fail_closed",
+        "dataFlow": "bidirectional",
+        "dataClassifications": [
+          "pii",
+          "confidential"
+        ],
+        "jurisdiction": [
+          "US"
+        ],
+        "alternative": "not_substitutable",
+        "industryRefs": [
+          {
+            "standard": "EU DORA",
+            "version": "2022/2554",
+            "conformance": "Article 28 critical ICT third-party provider"
+          },
+          {
+            "standard": "ISO/IEC 27036",
+            "version": "2014"
+          }
+        ]
+      },
+      {
+        "name": "Okta",
+        "type": "identity_provider",
+        "criticality": "critical",
+        "failureMode": "fail_closed",
+        "dataFlow": "bidirectional",
+        "dataClassifications": [
+          "pii"
+        ],
+        "jurisdiction": [
+          "US"
+        ],
+        "alternative": "partially_substitutable",
+        "industryRefs": [
+          {
+            "standard": "EU DORA",
+            "version": "2022/2554",
+            "conformance": "Article 28"
+          },
+          {
+            "standard": "NIST SP 800-161",
+            "version": "Rev. 1"
+          }
+        ]
+      },
+      {
+        "name": "ServiceNow",
+        "type": "saas",
+        "criticality": "important",
+        "failureMode": "queued",
+        "dataFlow": "egress_only",
+        "dataClassifications": [
+          "internal"
+        ],
+        "jurisdiction": [
+          "US"
+        ],
+        "alternative": "partially_substitutable"
+      },
+      {
+        "name": "Corporate SMTP",
+        "type": "infrastructure",
+        "criticality": "supportive",
+        "failureMode": "queued",
+        "dataFlow": "egress_only",
+        "dataClassifications": [
+          "internal",
+          "pii"
+        ],
+        "jurisdiction": [
+          "US"
+        ],
+        "alternative": "substitutable"
+      }
+    ]
   },
   "qualityAttributes": {
     "functionalSuitability": {
@@ -221,6 +303,15 @@
             "standard": "OWASP ASVS",
             "version": "5.0",
             "conformance": "L2"
+          },
+          {
+            "standard": "CIS Benchmarks",
+            "version": "Kubernetes",
+            "conformance": "Corporate baseline applied"
+          },
+          {
+            "standard": "NIST SP 800-190",
+            "version": "1.0"
           }
         ],
         "evidence": [
@@ -322,6 +413,10 @@
         {
           "standard": "ISO/IEC 25012",
           "version": "2008"
+        },
+        {
+          "standard": "NIST SP 800-88 Rev. 1",
+          "conformance": "Media sanitization for terminated employee data and decommissioned hardware"
         }
       ]
     },
@@ -352,6 +447,7 @@
     "name": "HR Technology, Acme Corp",
     "contact": "hr-tech@corp.example",
     "issuedAt": "2026-04-26T15:00:00Z",
-    "validFor": "P180D"
+    "validFor": "P180D",
+    "x-corp-cost-center": "HRTECH-OPS"
   }
 }

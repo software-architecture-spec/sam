@@ -4,8 +4,8 @@
 
 This policy covers security concerns about:
 
-- The SAM **specification text** ([`sam/v0.2/SPECIFICATION.md`](sam/v0.2/SPECIFICATION.md) and prior versions) — design flaws that weaken the threat model.
-- The **JSON Schema** ([`sam/v0.2/schema.json`](sam/v0.2/schema.json) and prior versions) — bugs that let invalid manifests pass or that reject conforming ones.
+- The SAM **specification text** ([`v0.1/SPECIFICATION.md`](v0.1/SPECIFICATION.md) and prior versions) — design flaws that weaken the threat model.
+- The **JSON Schema** ([`v0.1/schema.json`](v0.1/schema.json) and prior versions) — bugs that let invalid manifests pass or that reject conforming ones.
 - The **sample tooling** in this repo — particularly [`tools/validate.py`](tools/validate.py) and the [`.github/workflows/validate.yml`](.github/workflows/validate.yml) CI workflow.
 - The **registries** in [`registry/`](registry/) — incorrect or misleading canonical entries.
 
@@ -28,7 +28,7 @@ Please **do not** open public issues for security concerns until coordinated dis
 Helpful reports include:
 
 - Affected file or section (e.g., "schema `qualityAttributeClaim.evidence`" or "spec §5.1.6")
-- Affected version(s) (`v0.1`, `v0.2`, both, working tree)
+- Affected version(s) (`v0.1`, working tree, future versions)
 - The flaw — what's wrong, what attack or misuse it enables, what impact
 - A demonstration if you have one (a manifest that exercises the flaw, a validator command that misbehaves)
 - Your suggested fix (if any) — always welcome but not required

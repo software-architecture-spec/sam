@@ -1,4 +1,4 @@
-# SAM v0.2 conformance test corpus
+# SAM v0.1 conformance test corpus
 
 A corpus of known-good (`pass-*.json`) and known-bad (`fail-*.json`) manifests indexed by `manifest.json`. Each case maps to one or more conformance items in `SPECIFICATION.md §5.1`.
 
@@ -38,14 +38,14 @@ Three categories of violation slip past pure schema validation:
 import json
 from jsonschema import Draft202012Validator, FormatChecker
 
-schema = json.load(open("sam/v0.2/schema.json"))
-idx = json.load(open("sam/v0.2/conformance/manifest.json"))
+schema = json.load(open("v0.1/schema.json"))
+idx = json.load(open("v0.1/conformance/manifest.json"))
 v = Draft202012Validator(schema, format_checker=FormatChecker())
 
 for case in idx["cases"]:
     expected = case["expected"]
     try:
-        inst = json.load(open(f"sam/v0.2/conformance/{case['file']}"))
+        inst = json.load(open(f"v0.1/conformance/{case['file']}"))
     except json.JSONDecodeError:
         assert expected == "invalid", case["id"]
         continue
