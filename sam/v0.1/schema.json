@@ -268,7 +268,7 @@
         },
         "interactionCapability": {
           "$ref": "#/$defs/iso25010Characteristic",
-          "description": "ISO 25010:2023 renamed Usability. Sub-characteristics: appropriatenessRecognizability, learnability, operability, userErrorProtection, userEngagement, inclusivity (accessibility lives here), userAssistance, selfDescriptiveness."
+          "description": "Per ISO/IEC 25010:2023. Sub-characteristics: appropriatenessRecognizability, learnability, operability, userErrorProtection, userEngagement, inclusivity (accessibility lives here), userAssistance, selfDescriptiveness."
         },
         "reliability": {
           "$ref": "#/$defs/iso25010Characteristic",
@@ -284,11 +284,11 @@
         },
         "flexibility": {
           "$ref": "#/$defs/iso25010Characteristic",
-          "description": "ISO 25010:2023 expanded Portability. Sub-characteristics: adaptability, scalability, installability, replaceability."
+          "description": "Per ISO/IEC 25010:2023. Sub-characteristics: adaptability, scalability, installability, replaceability."
         },
         "safety": {
           "$ref": "#/$defs/iso25010Characteristic",
-          "description": "ISO 25010:2023 new top-level. Sub-characteristics: operationalConstraint, riskIdentification, failSafe, hazardWarning, safeIntegration."
+          "description": "Per ISO/IEC 25010:2023. Sub-characteristics: operationalConstraint, riskIdentification, failSafe, hazardWarning, safeIntegration."
         }
       }
     },

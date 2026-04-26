@@ -13,7 +13,7 @@
         "digest": {
           "sha256": "9f3e8d7c6b5a49382716e0a5b4c3d2e1f0987654321fedcba0987654321fedcb"
         },
-        "manifestUri": "https://artifacts.corp.example/onboarding-portal-api/5.12.0/dim.json"
+        "manifestUri": "https://artifacts.corp.example/onboarding-portal-api/5.12.0/sam.json"
       },
       {
         "layer": "artifact",
@@ -22,7 +22,7 @@
         "digest": {
           "sha256": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809"
         },
-        "manifestUri": "https://artifacts.corp.example/onboarding-portal-worker/5.12.0/dim.json"
+        "manifestUri": "https://artifacts.corp.example/onboarding-portal-worker/5.12.0/sam.json"
       }
     ]
   },

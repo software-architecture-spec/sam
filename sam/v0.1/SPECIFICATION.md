@@ -251,7 +251,7 @@ A change is **PATCH** when it is editorial and does not change the schema, the p
 
 A change is **MINOR** when it is additive: new optional fields, new optional sub-objects, new well-known enum values added to open enums. A manifest that conformed to `MAJOR.MINOR_OLD` MUST conform to any later `MAJOR.MINOR_NEW` of the same `MAJOR`. New consumers MUST be able to read manifests issued against earlier minor versions of the same major version.
 
-A change is **MAJOR** when it is breaking: removing a field, narrowing a value space, changing the meaning of an existing field, changing required-vs-optional status, or changing the predicate type URI. A manifest issued at one `MAJOR` MAY be invalid under the schema of the next `MAJOR`. The predicate type URI changes (e.g., `dim/v1` → `dim/v2`).
+A change is **MAJOR** when it is breaking: removing a field, narrowing a value space, changing the meaning of an existing field, changing required-vs-optional status, or changing the predicate type URI. A manifest issued at one `MAJOR` MAY be invalid under the schema of the next `MAJOR`. The predicate type URI changes (e.g., `sam/v1` → `sam/v2`).
 
 ### §6.3 Compatibility commitments
 
