@@ -4,8 +4,8 @@
 
 This policy covers security concerns about:
 
-- The SAM **specification text** ([`v0.1/SPECIFICATION.md`](v0.1/SPECIFICATION.md) and prior versions) — design flaws that weaken the threat model.
-- The **JSON Schema** ([`v0.1/schema.json`](v0.1/schema.json) and prior versions) — bugs that let invalid manifests pass or that reject conforming ones.
+- The SAM **specification text** ([`v0.2/SPECIFICATION.md`](v0.2/SPECIFICATION.md) and prior versions) — design flaws that weaken the threat model.
+- The **JSON Schema** ([`v0.2/schema.json`](v0.2/schema.json) and prior versions) — bugs that let invalid manifests pass or that reject conforming ones.
 - The **sample tooling** in this repo — particularly [`tools/validate.py`](tools/validate.py) and the [`.github/workflows/validate.yml`](.github/workflows/validate.yml) CI workflow.
 - The **registries** in [`registry/`](registry/) — incorrect or misleading canonical entries.
 
