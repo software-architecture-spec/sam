@@ -1,5 +1,7 @@
 # Software Architecture Manifest (SAM)
 
+- [Github Repo](https://github.com/software-architecture-spec/sam)
+
 A producer-signed, machine-readable declaration of what software was designed to do and the operational envelope it was designed for.
 
 SBOM tells you what's inside the software. SLSA tells you how it was built. OpenSSF Scorecard tells you whether good practices were followed. **SAM tells you what the producer designed it to be.**
