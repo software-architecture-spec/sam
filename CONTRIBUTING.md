@@ -2,7 +2,7 @@
 
 SAM is a working-draft proposal. Breaking changes are expected. The stable target is **v1**. We are actively asking for technical review, authoring feedback, citations, and validator implementations — not adoption commitments.
 
-This document covers how to engage. The normative reference is [`v0.1/SPECIFICATION.md`](v0.1/SPECIFICATION.md). Section numbers below refer to that document.
+This document covers how to engage. The normative reference is [`v0.2/SPECIFICATION.md`](v0.2/SPECIFICATION.md). Section numbers below refer to that document.
 
 ## What we're looking for
 
@@ -15,7 +15,7 @@ This document covers how to engage. The normative reference is [`v0.1/SPECIFICAT
 
 ### Filing an issue
 
-Use the [issue templates](.github/ISSUE_TEMPLATE/). Pick the one that matches:
+Use [Github Issues](https://github.com/software-architecture-spec/sam/issues) with predefined [issue templates](.github/ISSUE_TEMPLATE/). Pick the one that matches:
 
 - **Schema change proposal** — for additions, removals, or rewordings of schema fields, conformance rules, or spec sections.
 - **Registry addition** — for `standards.json` or `tensions.json` entries.
