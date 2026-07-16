@@ -71,7 +71,7 @@ SAM is intentionally scoped to coexist with, not replace, existing supply-chain 
 
 ### §1.5 Recommended open references
 
-ISO/IEC 25010:2023 is the normative anchor for `qualityAttributes`, but the standard text is paywalled. Readers without ISO access can use the following open companions to ground their understanding:
+ISO/IEC 25010:2023 is the normative anchor for `qualityAttributes`, and the standard text is paywalled. The following open companions give context on the model — they inform a reader's understanding but are not a substitute for the standard:
 
 - **Wikipedia: ISO/IEC 25010** — `https://en.wikipedia.org/wiki/ISO/IEC_25010` — summary-level coverage of the nine characteristics and their sub-characteristics.
 - **arc42 quality model** — `https://quality.arc42.org/` — an open practitioner's guide to defining and measuring software quality, organized along ISO 25010 lines.
