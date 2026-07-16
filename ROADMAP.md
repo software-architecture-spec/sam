@@ -29,6 +29,8 @@ These were the v0.2 candidates carried forward from the v0.1 review and now in t
 
 Drawn from a review of canonical systems-design literature (Release It! / DDIA / Fowler PEAA / SRE Book / Newman / Richards & Ford / Ousterhout) — each names a vocabulary producers and consumers commonly use that SAM has no slot for today.
 
+> **Critical path: `intent.deliveryForm` (below).** The v0.2 §10 flush-out made delivery form the load-bearing axis of §10.2–10.8 — how nearly every quality claim reads depends on whether the software is `saas` / `self_hosted_service` / `library` / `cli_tool` / `infrastructure` / `appliance`. But the field does not exist in the schema yet, so the normative §10 guidance keys off something an author cannot declare. Until `intent.deliveryForm` lands, that guidance is orphaned. This is the highest-priority v0.3 item, ahead of the literature-driven candidates.
+
 ### `architecturalStyle` (declarative)
 
 Single-value enum on `intent` declaring the architectural style:
@@ -65,7 +67,9 @@ Closes the gap that producers can't declare "this implements the circuit-breaker
 
 Expand §10 from definitions into a per-characteristic **SAM lens** — for each characteristic, ~3 lines of SAM-specific authoring guidance ISO structurally cannot have: how you declare it (typical `status` values, what a `verified` claim requires here, which `industryRefs[]` anchor it, whether the concept also lives in `envelope`/`extensions`) and what an honest claim looks like (when `not_applicable` is the truthful call). Evens out the thin entries (e.g. `compatibility.coExistence`, several `performanceEfficiency` subs) that still read close to a restatement, seeds the deferred Authoring Guide inline, and makes §10 decisively non-derivative of ISO. *(Substantially done — §10.2–10.8 now carry the SAM lens, grounded on the delivery-form taxonomy below; §10.1 (`correctness` fleshed) and §10.9 (`safety`, already domain-specific) were adequately concrete.)*
 
-### `intent.deliveryForm`
+### `intent.deliveryForm` — critical path
+
+**Priority: highest of the v0.3 candidates.** §10.2–10.8 already depend on this axis; shipping the guidance in v0.2 without the field leaves that guidance orphaned until the field lands.
 
 A declared enum for how the software is delivered and who operates it — `saas` / `self_hosted_service` / `library` / `cli_tool` / `infrastructure` / `appliance`, seeded in `registry/delivery-forms.json`. This is the axis §10 already leans on: the same quality key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. Making it a first-class field lets consumers filter and lets tooling apply the right reading automatically. Source model (proprietary / open_source / source_available) is an orthogonal candidate field, not part of this enum.
 
