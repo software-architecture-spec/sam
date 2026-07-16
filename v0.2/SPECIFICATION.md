@@ -564,14 +564,30 @@ Sub-characteristics:
 
 ### §10.5 reliability
 
-How dependably the software performs its functions under stated conditions for a stated period of time. Captures both behavior under failure and recoverability after failure.
+How dependably the software performs its functions under stated conditions for a stated period of time — behavior under failure and recovery after it.
+
+**Operated vs shipped decides whether reliability is a measured outcome or a built-in capability.** For **operated software** (`saas`), the producer owns the outcome: availability SLO, error budget, DR-drill results, and incident history are all measurable against the as-run system, and `verified` points at them. Pairs with `envelope.serviceLevels` (availability, `rpoMinutes`/`rtoMinutes`, `incidentResponse`). For **shipped software** (`self_hosted_service`, `infrastructure`, `appliance`), the producer builds the *mechanisms* (failover, backup/restore tooling, graceful degradation) but the *consumer* achieves the actual numbers — availability and RPO/RTO depend on how it is deployed. A shipped-software claim describes tested recovery behavior and the HA model, not an operated SLO the producer cannot honor on someone else's infrastructure. For a **`library`**, reliability is fault-clean code — no state corruption or resource leaks on error, deterministic failure handling; `availability` and `recoverability` are usually the host's concern (`not_applicable`).
 
 Sub-characteristics:
 
-1. **faultTolerance** — Continuing operation in the presence of faults (failed dependencies, network partitions, transient errors). *Example claim*: "Circuit breakers on all egress; workflows degrade gracefully when Workday is unreachable."
-2. **recoverability** — Ability to restore data and resume operation after failure within stated RPO/RTO targets. *Example claim*: "Hourly Postgres backups; RPO 1 h / RTO 4 h verified quarterly via DR drill."
-3. **availability** — Fraction of time the software is operational and accessible against its defined service window. *Example claim*: "99.9% availability during business hours; best-effort overnight."
-4. **maturity** — Dependability of the software in normal operation, reflecting absence of latent defects that emerge under load or over time. *Example claim*: "In production for 3 years; <1 P1 incident per quarter."
+1. **faultTolerance** — Continuing to operate in the presence of faults (failed dependencies, network partitions, transient errors).
+   - *Declared as:* the degradation posture and the mechanisms behind it. Where fault behavior forks on the CAP boundary — stay available and serve stale, or stay consistent and reject — declare the matching `tensionsDeclared` entry (`cap_pacelc`).
+   - *Example (SaaS):* "Circuit breakers on all egress; workflows degrade gracefully when Workday is unreachable; during a primary-replica partition reads stay available (AP) and writes reject."
+   - *Example (library):* "No partial writes on error; every failure path releases its resources; all operations are idempotent and safe to retry."
+
+2. **recoverability** — Restoring data and resuming operation after failure within stated RPO/RTO targets.
+   - *Declared as:* for operated software, the achieved RPO/RTO and how they were validated (put the numbers in `envelope.serviceLevels`); for shipped software, the backup/restore *tooling and tested restore time*, since the consumer sets the cadence and owns the achieved RPO.
+   - *Example (SaaS):* "Hourly Postgres backups; RPO 1 h / RTO 4 h verified quarterly via DR drill." `[evidence: DR-drill report URI]`
+   - *Example (self-hosted):* "Ships point-in-time restore tooling; a 100 GB restore completes in <20 min on the reference config. Backup cadence and retention are operator-configured."
+
+3. **availability** — Fraction of time the software is operational and accessible against a defined service window.
+   - *Declared as:* an operated outcome — only meaningful when the producer runs it. For `saas`, state it and put the SLO in `envelope.serviceLevels`. For shipped software, availability is the consumer's result; the producer instead claims the **HA capability** that enables it (redundancy model, tested failover time), not a percentage it cannot control. Honest posture for a plain `library` or `cli_tool`: `not_applicable`.
+   - *Example (SaaS):* "99.9% availability during business hours, best-effort overnight; measured against the public status page."
+   - *Example (infrastructure):* "Supports HA via leader election; tested automatic failover < 30 s on loss of the primary. Achieved availability depends on operator topology."
+
+4. **maturity** — Dependability in normal operation — the absence of latent defects that surface under load or over time.
+   - *Declared as:* the track record that stands in for "it has been shaken out" — production tenure, defect/incident rate, adoption. `verified` points at an incident record or public issue history.
+   - *Example:* "In production for 3 years across 40 tenants; <1 P1 incident per quarter; public issue tracker."
 
 ### §10.6 security
 
@@ -628,12 +644,29 @@ Sub-characteristics:
 
 The ease with which the software can be adapted to different or changing environments, requirements, or scales. Renamed and broadened from "Portability" in ISO 25010:2023 to include adaptability and scalability.
 
+**Delivery form decides which sub-characteristics even apply.** For **consumer-operated software** (`self_hosted_service`, `library`, `cli_tool`, `infrastructure`, `appliance`), flexibility is a first-class purchase decision — the consumer chooses where and how to run it, so adaptability, installability, and replaceability all carry weight. For **operated software** (`saas`), the producer controls the environment: `installability` is `not_applicable` (nothing to install — you sign up), `adaptability` is the producer's internal concern, and only `scalability` (as an operated posture) and `replaceability` (can the customer leave?) matter to the consumer.
+
 Sub-characteristics:
 
-1. **adaptability** — How well the software adapts to different environments (different OSes, container runtimes, infrastructure profiles) without code changes. *Example claim*: "Runs on Kubernetes (primary) or VM (fallback); same image in both deployment paths."
-2. **scalability** — How well the software handles increasing load by scaling horizontally, vertically, or both. *Example claim*: "Horizontal to 50 replicas verified; the upstream API rate limit is the bottleneck above 50."
-3. **installability** — Ease of installing or uninstalling cleanly. *Example claim*: "Helm chart maintained for corporate K8s; documented prerequisites; uninstall removes all state by default."
-4. **replaceability** — Whether the software can be replaced with a similar offering without disruption to its consumers. *Example claim*: "Public API conforms to OpenAPI 3.1.0; downstream consumers depend only on the contract, not the implementation."
+1. **adaptability** — Running in different environments (OSes, container runtimes, infrastructure profiles, language runtimes) without code changes.
+   - *Declared as:* the supported environment matrix. For shipped software this is the OS/arch/runtime support grid; for a `library`, the supported language/runtime versions and platforms; for `saas`, usually `not_applicable` to the consumer.
+   - *Example (self-hosted):* "Runs on Kubernetes (primary) or a VM (fallback); same image in both paths; linux/amd64 + linux/arm64."
+   - *Example (library):* "Supports Python 3.10–3.13 on CPython and PyPy; pure-Python, no native build step."
+
+2. **scalability** — Handling increasing load by scaling horizontally, vertically, or both. Distinct from `performanceEfficiency.capacity` (the *tested ceiling*): scalability is the *mechanism* for moving that ceiling.
+   - *Declared as:* the scaling model and its verified limit; cross-reference `envelope.scaling` and don't restate `capacity`. For `saas` this is the operated autoscaling posture; for shipped software it is the scaling topology the consumer can deploy (replicas, sharding, read replicas) and what has been tested.
+   - *Example (SaaS):* "Horizontal to 50 replicas verified; the upstream API rate limit is the bottleneck above 50 (see `performanceEfficiency.capacity`)."
+   - *Example (infrastructure):* "Scales via consistent-hash sharding; tested to 8 shards / 4 TB; adding a shard rebalances online."
+
+3. **installability** — Installing and uninstalling cleanly. Meaningful only for consumer-operated forms; `not_applicable` for `saas`.
+   - *Declared as:* the install/uninstall path, prerequisites, and whether uninstall is clean (leaves no state). Anchor via `industryRefs[]`: OCI Image Spec, Helm chart schema.
+   - *Example (self-hosted):* "Helm chart maintained for corporate K8s; documented prerequisites; uninstall removes all state by default."
+   - *Example (CLI):* "Single static binary, no runtime dependencies; install/uninstall are copy/delete; config lives in one XDG path."
+
+4. **replaceability** — Whether a consumer can swap the software for a similar offering without disruption — the anti-lock-in property.
+   - *Declared as:* what makes it replaceable — a standard contract/format, documented data export, or wire-protocol compatibility. Cross-reference `compatibility.interoperability` (§10.3) for the contract itself. Every system with consumers has a replaceability story, so prefer `declared` over `not_applicable` unless there genuinely are no consumers to disrupt.
+   - *Example (SaaS):* "Full data export via the public API (OpenAPI 3.1.0); no proprietary formats; documented offboarding runbook."
+   - *Example (infrastructure):* "Speaks the PostgreSQL wire protocol; a drop-in target for standard Postgres clients."
 
 ### §10.9 safety
 

@@ -63,13 +63,15 @@ Closes the gap that producers can't declare "this implements the circuit-breaker
 
 ### §10 → authoring reference
 
-Expand §10 from definitions into a per-characteristic **SAM lens** — for each characteristic, ~3 lines of SAM-specific authoring guidance ISO structurally cannot have: how you declare it (typical `status` values, what a `verified` claim requires here, which `industryRefs[]` anchor it, whether the concept also lives in `envelope`/`extensions`) and what an honest claim looks like (when `not_applicable` is the truthful call). Evens out the thin entries (e.g. `compatibility.coExistence`, several `performanceEfficiency` subs) that still read close to a restatement, seeds the deferred Authoring Guide inline, and makes §10 decisively non-derivative of ISO. *(In progress — §10.2/10.3/10.4/10.6/10.7 done, grounded on the delivery-form taxonomy below.)*
+Expand §10 from definitions into a per-characteristic **SAM lens** — for each characteristic, ~3 lines of SAM-specific authoring guidance ISO structurally cannot have: how you declare it (typical `status` values, what a `verified` claim requires here, which `industryRefs[]` anchor it, whether the concept also lives in `envelope`/`extensions`) and what an honest claim looks like (when `not_applicable` is the truthful call). Evens out the thin entries (e.g. `compatibility.coExistence`, several `performanceEfficiency` subs) that still read close to a restatement, seeds the deferred Authoring Guide inline, and makes §10 decisively non-derivative of ISO. *(Substantially done — §10.2–10.8 now carry the SAM lens, grounded on the delivery-form taxonomy below; §10.1 (`correctness` fleshed) and §10.9 (`safety`, already domain-specific) were adequately concrete.)*
 
 ### `intent.deliveryForm`
 
 A declared enum for how the software is delivered and who operates it — `saas` / `self_hosted_service` / `library` / `cli_tool` / `infrastructure` / `appliance`, seeded in `registry/delivery-forms.json`. This is the axis §10 already leans on: the same quality key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. Making it a first-class field lets consumers filter and lets tooling apply the right reading automatically. Source model (proprietary / open_source / source_available) is an orthogonal candidate field, not part of this enum.
 
 The delivery-form IDs are deliberately the delivery-form subset of the shipped `envelope.dependencies[].type` enum (`saas`, `self_hosted_service`, `infrastructure`, `library`) so a subject's delivery form and a dependency's kind share one vocabulary. The clean end state: **split `envelope.dependencies[].type`** (currently `experimental`) **into `deliveryForm` + `role`** — `deliveryForm` drawn from this registry, `role` carrying the functional-provider values (`payment_provider`, `identity_provider`, `data_provider`, `communication_provider`, `observability_provider`, `ml_model_provider`). That removes the axis-mixing in the current enum and makes one delivery-form vocabulary serve both subject and dependency.
+
+Landing the field adds conformance cases: a positive case with a valid `deliveryForm`, and — if `deliveryForm` follows the advisory registry pattern used for `tensionsDeclared.tension` and `industryRefs.standard` (free string, not a hard enum) — an unknown value as `schema-valid-but-spec-nonconforming` (mirroring `fail-11-unknown-tension`), not a hard reject.
 
 ## Spec content deferred from v0.2
 
@@ -121,7 +123,7 @@ These came out of consumer-side review and design-pattern coverage analysis. Eac
 
 **Open / no decision yet:**
 
-- **Replaceability semantics.** Reviewer flagged `flexibility.replaceability: not_applicable` as "philosophically odd — every system has a replaceability story." Possible v0.3 wording change in `SPECIFICATION.md §10.8` to constrain when `not_applicable` is appropriate; gathering more authoring feedback first.
+- **Replaceability semantics.** `SPECIFICATION.md §10.8` (v0.2) now gives authoring guidance — prefer `declared` over `not_applicable` unless there are genuinely no consumers to disrupt. Still open for v0.3: whether to turn that guidance into a schema-enforced constraint (gathering authoring feedback first).
 - **Layer terminology clarity.** Reviewer had to infer the `artifact` / `service` / `product` hierarchy without the spec. The model itself is sound; the README and authoring guide can do better at signaling the hierarchy at a glance.
 
 **Explicitly out of scope (carried forward):**
