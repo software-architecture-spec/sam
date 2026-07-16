@@ -78,9 +78,9 @@ Chosen as a **hard enum** (consistent with `intent.audience` and the former `dep
 
 ## Near-term — v0.4 candidates
 
-### Gradability for `architecturalStyle` / `architecturalPatterns`
+### Gradability for `architecturalStyle` / `architecturalPatterns` — resolved in v0.3 (§5.5)
 
-Surfaced by the v0.3 review. Unlike `qualityAttributes` (which carry `status` / `evidence[]`), `intent.architecturalStyle` and `intent.architecturalPatterns[]` are bare producer self-assertions with no evidentiary ladder and no consumer-facing consequence — a producer can claim `architecturalPatterns: ["circuit_breaker"]` with nothing backing it, and an AI agent may over-trust it. They risk becoming vanity metadata in a spec whose thesis is honest, gradable claims. (`deliveryForm` is exempt — it is verifiable-by-consequence: it changes how every quality claim reads and is cross-checkable against `subject.layer` and `serviceLevels`.) *Options for v0.4:* give the two fields a `declared` / `verified` + `evidence[]` shape like `qualityAttributes`, or explicitly scope them as informational (non-graded) in the spec so consumers don't over-read them.
+Surfaced by the v0.3 review: unlike `qualityAttributes` (which carry `status` / `evidence[]`), these two fields were bare self-assertions an AI agent might over-trust. **Resolved in v0.3 via a spec patch (§5.5), deliberately not an evidence ladder** — architecture resists direct evidence (no artifact proves "this is microservices" the way a load test proves a latency claim), so a `status` / `evidence` shape would manufacture assurance that does not exist. §5.5 scopes `intent.architecturalStyle` / `architecturalPatterns[]` as declarative **design-context** (not graded), states that a pattern's verifiable *effect* lives in the `qualityAttributes` sub-characteristic it serves (registry `applies_to` gives the mapping), and notes they are layer-sensitive (declare where true; a `product` composes from `components[]`). `deliveryForm` was already exempt (verifiable-by-consequence).
 
 ### `serverless_function` delivery form
 

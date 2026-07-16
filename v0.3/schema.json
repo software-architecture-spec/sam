@@ -223,7 +223,7 @@
             "actor",
             "hybrid"
           ],
-          "description": "Stability: experimental. The high-level architectural style the software was designed as. Distinct from subject.layer (granularity of this manifest) and subject.components[] (composition). hybrid: a deliberate mix; describe specifics in architecturalPatterns[] or x-* extensions.",
+          "description": "Stability: experimental. The high-level architectural style the software was designed as. Distinct from subject.layer (granularity of this manifest) and subject.components[] (composition). hybrid: a deliberate mix; describe specifics in architecturalPatterns[] or x-* extensions. Design-context, not a graded claim (see SPECIFICATION.md §5.5).",
           "x-sam-stability": "experimental"
         },
         "architecturalPatterns": {
@@ -231,7 +231,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Stability: experimental. Well-known architectural/resilience patterns the software implements (e.g., circuit_breaker, bulkhead, saga, cqrs, event_sourcing, outbox). Open string set: advisory canonical IDs in /registry/patterns.json; unknown values are schema-valid but SHOULD use a registered ID or an 'x:'-prefixed local ID. Empty/omitted = no claim."
+          "description": "Stability: experimental. Well-known architectural/resilience patterns the software implements (e.g., circuit_breaker, bulkhead, saga, cqrs, event_sourcing, outbox). Open string set: advisory canonical IDs in /registry/patterns.json; unknown values are schema-valid but SHOULD use a registered ID or an 'x:'-prefixed local ID. Empty/omitted = no claim. Design-context, not a graded claim: a pattern's verifiable effect is claimed in the qualityAttributes sub-characteristic it serves (see SPECIFICATION.md §5.5)."
         }
       }
     },

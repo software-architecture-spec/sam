@@ -102,7 +102,10 @@ The following terms are used with the meanings given here throughout this specif
 - **Operational envelope** — The design-time target operating conditions declared in `envelope`.
 - **Operational dependency** — A third-party ICT service the software depends on at runtime, declared in `envelope.dependencies[]` with criticality, failure-mode, data-flow, and jurisdictional metadata. Distinct from `envelope.network.requiredEgress[]` (which is host:port-level); a single operational dependency may correspond to multiple egress entries.
 - **Intent** — The purpose, audience, tenancy model, delivery form, and architectural style declared in `intent`.
-- **Delivery form** — How the software is delivered and who operates it, declared in `intent.deliveryForm`: one of `saas`, `self_hosted_service`, `library`, `cli_tool`, `desktop_app`, `mobile_app`, `browser_extension`, `infrastructure`, `appliance`. Governs how a quality claim reads (§10); the same vocabulary types an operational dependency (`envelope.dependencies[].deliveryForm`). Canonical IDs in `/registry/delivery-forms.json`.
+- **Delivery form** — How the software is delivered and who operates it, declared in `intent.deliveryForm`: one of `saas`, `self_hosted_service`, `library`, `cli_tool`, `desktop_app`, `mobile_app`, `browser_extension`, `infrastructure`, `appliance`. Governs how a quality claim reads (§10); the same vocabulary types an operational dependency (`envelope.dependencies[].deliveryForm`). Canonical IDs in `/registry/delivery-forms.json`. Design-context (§5.5).
+- **Architectural style** — The high-level structural style the software was designed as, declared in `intent.architecturalStyle` (e.g., `microservices`, `modular_monolith`). Design-context (§5.5), not a graded claim.
+- **Architectural pattern** — A well-known design or resilience pattern the software implements, listed in `intent.architecturalPatterns[]` (e.g., `circuit_breaker`, `saga`; canonical IDs in `/registry/patterns.json`). Design-context (§5.5); its verifiable effect is claimed in the `qualityAttributes` sub-characteristic it serves.
+- **Design-context** — Declarative facts about a system's design, carried in `intent` (`deliveryForm`, `architecturalStyle`, `architecturalPatterns[]`), as distinct from graded quality-attribute claims. See §5.5.
 - **Industry reference** — A normative pointer to an external standard, declared in `industryRefs[]`.
 - **Informational reference** — A non-normative pointer to design-context resources, declared in `informationalRefs[]`.
 - **Tension** — A coupled trade-off between quality attributes (e.g., consistency vs. availability vs. latency) on which the producer must choose a posture.
@@ -240,6 +243,21 @@ A viewer:
 
 - SHOULD render `unspecified` claims with the same visual weight as `declared` and `verified` claims, so that consumers see honest absence rather than scrolling past it.
 - SHOULD distinguish `declared` (no evidence) from `verified` (evidence present) in the visual surface.
+
+### §5.5 Design-context vs. graded claims
+
+SAM carries two kinds of statement, and they are read differently:
+
+- **Graded claims** live in `qualityAttributes` (and the `extensions` quality blocks). Each carries a `status` (`unspecified` / `declared` / `verified` / `not_applicable`) and, when `verified`, `evidence[]`. This is SAM's honesty mechanism.
+- **Design-context** lives in `intent`: declarative facts about how the software was designed — `audience`, `tenancy`, `deliveryForm`, `architecturalStyle`, and `architecturalPatterns[]`. These are *not* graded and carry no `status` or `evidence[]`, by design.
+
+Architecture resists direct evidence: "this is `microservices`" or "we implement `circuit_breaker`" has no artifact that proves it the way a load test proves a latency claim. Forcing a `status` / `evidence` ladder onto these fields would manufacture assurance that does not exist. Instead:
+
+- Design-context is **cross-checkable, not evidenced**. `architecturalStyle` should be consistent with `subject.layer` and `subject.components[]`; `deliveryForm` is consistent-by-consequence with how the quality claims read (§10).
+- A pattern's **verifiable effect lives in the `qualityAttributes` sub-characteristic it serves**. `circuit_breaker` produces `reliability.faultTolerance`; `cqrs` produces `performanceEfficiency` / `flexibility.scalability`. The `applies_to` field in `/registry/patterns.json` records this mapping. The evidence for whether the circuit breaker actually works is the `status` / `evidence[]` on that quality claim, not on the pattern entry.
+- Design-context is **layer-sensitive**. Declare `architecturalStyle` and `architecturalPatterns[]` at the layer where they are literally true — usually `artifact` or `service`. A `product`-layer manifest's architecture is the composition of its `components[]`, not a flat re-declaration.
+
+Consumers and AI agents SHOULD read `intent`'s design-context as declarative design signal — useful for discovery, filtering, and reasoning — and SHOULD NOT read it as evidenced. To assess whether a declared pattern delivers its intended property, follow it to the corresponding `qualityAttributes` claim.
 
 ---
 
