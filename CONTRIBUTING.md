@@ -2,7 +2,7 @@
 
 SAM is a working-draft proposal. Breaking changes are expected. The stable target is **v1**. We are actively asking for technical review, authoring feedback, citations, and validator implementations — not adoption commitments.
 
-This document covers how to engage. The normative reference is [`v0.2/SPECIFICATION.md`](v0.2/SPECIFICATION.md). Section numbers below refer to that document.
+This document covers how to engage. The normative reference is [`v0.3/SPECIFICATION.md`](v0.3/SPECIFICATION.md). Section numbers below refer to that document.
 
 ## What we're looking for
 
@@ -74,7 +74,7 @@ Before requesting review, confirm:
 
 ## Versioning and frozen versions
 
-`/v0.1/` is the current published version (and frozen at its URIs once any consumer signs against it). Changes go to the next minor (`v0.2` while `MAJOR` is `0`) or the next major. Past versions remain at their URIs forever — that's the same-MAJOR backward-compatibility promise (§6.3).
+`/v0.3/` is the current published version; `/v0.1/` and `/v0.2/` are frozen at their URIs. Changes go to the next minor (`v0.4` while `MAJOR` is `0`) or the next major. Past versions remain at their URIs forever — that's the same-MAJOR backward-compatibility promise (§6.3).
 
 If you're proposing a change that would break a v0.1 manifest, label your issue `breaking` and explain the migration path. Whether the change lands in v0.x or waits for v1.0 depends on how disruptive it is; expect a discussion.
 

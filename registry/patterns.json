@@ -1,0 +1,127 @@
+{
+  "registry": "sam-patterns",
+  "version": "0.1",
+  "description": "Well-known identifiers for intent.architecturalPatterns[]. Producers SHOULD use one of these IDs when the named pattern applies; for project-specific patterns not in this registry, use the 'x:' prefix. Advisory, not schema-enforced (intent.architecturalPatterns is an open string array).",
+  "entries": [
+    {
+      "id": "circuit_breaker",
+      "name": "Circuit breaker",
+      "summary": "Stops calling a failing dependency after a threshold of errors, failing fast until it recovers, to prevent cascading failure and resource exhaustion.",
+      "cite": "Nygard, Release It! (2nd ed.); Fowler.",
+      "uri": "https://martinfowler.com/bliki/CircuitBreaker.html",
+      "applies_to": ["reliability.faultTolerance"]
+    },
+    {
+      "id": "bulkhead",
+      "name": "Bulkhead",
+      "summary": "Partitions resources (thread pools, connection pools) so a failure or overload in one partition cannot exhaust resources needed by others.",
+      "cite": "Nygard, Release It!.",
+      "uri": "https://learn.microsoft.com/azure/architecture/patterns/bulkhead",
+      "applies_to": ["reliability.faultTolerance"]
+    },
+    {
+      "id": "timeout",
+      "name": "Timeout",
+      "summary": "Bounds how long a caller waits on a dependency so a slow or hung call cannot block indefinitely.",
+      "cite": "Nygard, Release It!.",
+      "uri": "",
+      "applies_to": ["reliability.faultTolerance", "performanceEfficiency.timeBehaviour"]
+    },
+    {
+      "id": "fail_fast",
+      "name": "Fail fast",
+      "summary": "Rejects work early when preconditions (capacity, dependency health) are not met, rather than accepting it and failing partway.",
+      "cite": "Nygard, Release It!.",
+      "uri": "",
+      "applies_to": ["reliability.faultTolerance"]
+    },
+    {
+      "id": "retry_with_backoff",
+      "name": "Retry with backoff",
+      "summary": "Retries a transient failure with increasing delay and jitter to recover without amplifying load or synchronizing retries into a thundering herd.",
+      "cite": "AWS Architecture Blog; Nygard, Release It!.",
+      "uri": "https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/",
+      "applies_to": ["reliability.faultTolerance"]
+    },
+    {
+      "id": "fallback",
+      "name": "Fallback",
+      "summary": "Serves a degraded but acceptable response (cached data, default, reduced feature) when the primary path is unavailable.",
+      "cite": "Nygard, Release It!.",
+      "uri": "",
+      "applies_to": ["reliability.faultTolerance"]
+    },
+    {
+      "id": "cqrs",
+      "name": "Command Query Responsibility Segregation",
+      "summary": "Separates the write model from one or more read models so each can be scaled and optimized independently.",
+      "cite": "Young; Fowler.",
+      "uri": "https://martinfowler.com/bliki/CQRS.html",
+      "applies_to": ["performanceEfficiency", "maintainability.modularity", "flexibility.scalability"]
+    },
+    {
+      "id": "event_sourcing",
+      "name": "Event sourcing",
+      "summary": "Persists state as an append-only log of events; current state is derived by replaying them, giving a full audit trail and temporal queries.",
+      "cite": "Fowler.",
+      "uri": "https://martinfowler.com/eaaDev/EventSourcing.html",
+      "applies_to": ["reliability.recoverability", "security.nonRepudiation", "maintainability"]
+    },
+    {
+      "id": "cache_aside",
+      "name": "Cache-aside",
+      "summary": "The application loads on a cache miss and populates the cache; the cache is not in the write path. Also called lazy loading.",
+      "cite": "Microsoft Cloud Design Patterns.",
+      "uri": "https://learn.microsoft.com/azure/architecture/patterns/cache-aside",
+      "applies_to": ["performanceEfficiency"]
+    },
+    {
+      "id": "write_through",
+      "name": "Write-through cache",
+      "summary": "Writes go to the cache and the backing store synchronously, keeping the cache consistent at the cost of write latency.",
+      "cite": "Standard caching literature.",
+      "uri": "",
+      "applies_to": ["performanceEfficiency", "reliability"]
+    },
+    {
+      "id": "write_back",
+      "name": "Write-back cache",
+      "summary": "Writes go to the cache and are flushed to the backing store asynchronously, lowering write latency at the risk of loss on failure before flush.",
+      "cite": "Standard caching literature.",
+      "uri": "",
+      "applies_to": ["performanceEfficiency"]
+    },
+    {
+      "id": "saga",
+      "name": "Saga",
+      "summary": "Coordinates a long-running business transaction as a sequence of local transactions with compensating actions for rollback, avoiding distributed locks.",
+      "cite": "Garcia-Molina & Salem (1987); Richardson, Microservices Patterns.",
+      "uri": "https://microservices.io/patterns/data/saga.html",
+      "applies_to": ["reliability", "functionalSuitability.correctness"]
+    },
+    {
+      "id": "outbox",
+      "name": "Transactional outbox",
+      "summary": "Writes an outgoing message to an outbox table in the same local transaction as the state change, then relays it, guaranteeing at-least-once delivery without a distributed transaction.",
+      "cite": "Richardson, Microservices Patterns.",
+      "uri": "https://microservices.io/patterns/data/transactional-outbox.html",
+      "applies_to": ["reliability", "compatibility.interoperability"]
+    },
+    {
+      "id": "unit_of_work",
+      "name": "Unit of Work",
+      "summary": "Tracks the objects changed during a business transaction and coordinates writing them out and resolving concurrency as one commit.",
+      "cite": "Fowler, Patterns of Enterprise Application Architecture.",
+      "uri": "https://martinfowler.com/eaaCatalog/unitOfWork.html",
+      "applies_to": ["maintainability", "functionalSuitability.correctness"]
+    },
+    {
+      "id": "repository",
+      "name": "Repository",
+      "summary": "Mediates between the domain and data-mapping layers behind a collection-like interface, decoupling business logic from persistence.",
+      "cite": "Fowler, Patterns of Enterprise Application Architecture.",
+      "uri": "https://martinfowler.com/eaaCatalog/repository.html",
+      "applies_to": ["maintainability.modularity", "maintainability.testability"]
+    }
+  ]
+}

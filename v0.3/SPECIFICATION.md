@@ -1,0 +1,705 @@
+# Software Architecture Manifest — Specification
+
+Version: 0.3 (draft)
+Status: Working draft. Breaking changes expected before v1.
+
+This document is the normative reference for the Software Architecture Manifest (SAM). The accompanying [JSON Schema](schema.json) is the syntactic form; this document defines what conformance to that form means and what claims a SAM is asserting when it is signed.
+
+This document is structured into nine sections:
+
+1. **Scope** — what SAM is, what it isn't, who it's for
+2. **Terminology** — the words this specification uses precisely
+3. **Conformance language** — how to read MUST / SHOULD / MAY in the rest of the spec
+4. **Threat model** — what SAM defends against, what it does not
+5. **Definition of a conforming SAM** — the normative requirements for producers and consumers
+6. **Versioning** — how this specification evolves and what guarantees consumers can rely on across versions
+7. **Extensibility** — how producers extend a SAM without forking the schema
+8. **Stability** — how individual fields signal their maturity to consumers
+9. **SAM Levels** — L0–L3 tiered conformance, the maturity signal a consumer reads at a glance
+
+Authoring and verification guides and lifecycle policy are deferred to a subsequent iteration of this specification.
+
+---
+
+## §1 Scope
+
+### §1.1 What SAM is
+
+A Software Architecture Manifest is a producer-signed, machine-readable declaration of:
+
+1. **What the software was designed to do** — its purpose, intended audience, and tenancy model.
+2. **The operational envelope it was designed for** — throughput, scaling axis, instantiation mode, privilege posture, network posture, and persistence requirements.
+3. **The quality attributes the producer claims, with evidence where applicable** — performance, reliability, security, etc., per ISO/IEC 25010:2023, with cross-references to industry standards (NIST SSDF, OWASP ASVS, WCAG, OpenTelemetry, etc.).
+4. **The tensions the producer has chosen postures on** — CAP/PACELC, observability cost trilemma, etc.
+
+A SAM is a *predicate* in the in-toto sense. It is intended to be signed via DSSE / sigstore / cosign and bound to its subject by content digest. The signing mechanism is not specified here; this document defines only the predicate body.
+
+A SAM may describe an artifact (a single signed deployable), a service (a logical SLO-owning unit composed of one or more artifacts), or a product (the contractual surface composed of one or more services). The granularity is declared explicitly via `subject.layer`.
+
+### §1.2 What SAM is NOT
+
+A SAM is not:
+
+- A **build attestation**. SLSA covers how software was built. SAM covers what it was designed to do.
+- A **bill of materials**. SBOM (CycloneDX, SPDX) covers what is inside the software. SAM covers what the software is for.
+- A **vulnerability disclosure format**. That is CSAF / VEX.
+- A **runtime telemetry format**. SAM declares design intent, not observed behavior.
+- A **legal contract** or **service-level agreement**. A SAM carries no automatic legal weight; it asserts producer claims that a separate contract may incorporate by reference.
+- A **license declaration**. That is SBOM territory.
+- A **substitute for testing**. Evidence URIs reference verification artifacts; SAM is a pointer to verification, not verification itself.
+
+### §1.3 Audience
+
+SAM is designed to be read by three classes of consumer:
+
+- **Producers** — OSS maintainers, software vendors, internal platform teams — who issue SAMs to declare what they built.
+- **Consumers** — procurement, audit, security teams, SREs, downstream developers, and AI agents — who read SAMs to assess what they are adopting.
+- **Tooling builders** — implementers of validators, signers, viewers, and CI integrations — who need a stable normative target.
+
+### §1.4 Relationship to other specifications
+
+SAM is intentionally scoped to coexist with, not replace, existing supply-chain artifacts:
+
+| Layer | Existing standard | SAM relationship |
+|---|---|---|
+| Contents | SBOM (CycloneDX, SPDX) | Referenced via `subject.sbomRef` |
+| Build provenance | SLSA, in-toto | SAM is a sibling predicate, signed via the same envelope |
+| Quality model | ISO/IEC 25010:2023 | The spine of `qualityAttributes` |
+| Vulnerabilities | CSAF, VEX | Out of scope; complementary |
+| Software identity | OCI, package URLs | `subject.digest` and `subject.name` interoperate |
+| Operational third-party risk | EU DORA Art. 28, NIS2, ISO/IEC 27036, NIST SP 800-161 | `envelope.dependencies[]` carries criticality, failure mode, jurisdiction, and data-flow metadata that consumers under these regimes need to populate their own ICT third-party risk registers |
+
+### §1.5 Recommended open references
+
+ISO/IEC 25010:2023 is the normative anchor for `qualityAttributes`, and the standard text is paywalled. The following open companions give context on the model — they inform a reader's understanding but are not a substitute for the standard:
+
+- **Wikipedia: ISO/IEC 25010** — `https://en.wikipedia.org/wiki/ISO/IEC_25010` — summary-level coverage of the nine characteristics and their sub-characteristics.
+- **arc42 quality model** — `https://quality.arc42.org/` — an open practitioner's guide to defining and measuring software quality, organized along ISO 25010 lines.
+- **NIST SP 800-160 Volume 1** — `https://csrc.nist.gov/pubs/sp/800/160/v1/r1/final` — open systems-engineering guidance complementary to (not a substitute for) the quality model.
+
+This specification's **§10 — Quality characteristic definitions** gives SAM's own plain-English definition for each characteristic and sub-characteristic, using the ISO/IEC 25010:2023 *names* as the canonical vocabulary, with example producer claims. Those definitions are original to the SAM project (CC-BY-4.0), are informative, and are not a reproduction or replacement of the ISO standard text — §10 fixes what SAM's schema keys mean; for the authoritative quality model, consult ISO/IEC 25010:2023. The Wikipedia / arc42 / NIST references are informational broadening, not prerequisites.
+
+---
+
+## §2 Terminology
+
+The following terms are used with the meanings given here throughout this specification.
+
+- **Artifact** — A single deployable unit: a container image, a binary, a package, or a library, identified by a content-addressed digest.
+- **Service** — A logical unit composed of one or more artifacts that owns one or more service-level objectives.
+- **Product** — A contractual or customer-facing offering composed of one or more services.
+- **Subject** — The artifact, service, or product that a manifest describes. Declared in `subject` with a `layer` discriminator.
+- **SAM** — A Software Architecture Manifest; an instance of the format defined by this specification.
+- **Manifest** — A single SAM document.
+- **Manifest version** — The schema version a manifest claims to conform to, declared in `manifestVersion`.
+- **Predicate** — The manifest body when wrapped in an in-toto Statement for signing.
+- **Predicate type URI** — The canonical URI identifying the SAM predicate format and version, set in the in-toto Statement's `predicateType` field. For this version: `https://software-architecture-spec.github.io/sam/v0.3`.
+- **Producer** — The party that issues and signs a SAM. Declared in `producer.name`.
+- **Consumer** — Any party that reads a SAM.
+- **Claim** — A single statement of fact made in a SAM (e.g., a quality attribute claim, a tension posture).
+- **Evidence** — A referenced artifact supporting a claim, identified by URI in `evidence[].uri`.
+- **Quality attribute** — An ISO/IEC 25010:2023 characteristic (one of nine) or sub-characteristic.
+- **Operational envelope** — The design-time target operating conditions declared in `envelope`.
+- **Operational dependency** — A third-party ICT service the software depends on at runtime, declared in `envelope.dependencies[]` with criticality, failure-mode, data-flow, and jurisdictional metadata. Distinct from `envelope.network.requiredEgress[]` (which is host:port-level); a single operational dependency may correspond to multiple egress entries.
+- **Intent** — The purpose, audience, tenancy model, delivery form, and architectural style declared in `intent`.
+- **Delivery form** — How the software is delivered and who operates it, declared in `intent.deliveryForm`: one of `saas`, `self_hosted_service`, `library`, `cli_tool`, `desktop_app`, `mobile_app`, `browser_extension`, `infrastructure`, `appliance`. Governs how a quality claim reads (§10); the same vocabulary types an operational dependency (`envelope.dependencies[].deliveryForm`). Canonical IDs in `/registry/delivery-forms.json`.
+- **Industry reference** — A normative pointer to an external standard, declared in `industryRefs[]`.
+- **Informational reference** — A non-normative pointer to design-context resources, declared in `informationalRefs[]`.
+- **Tension** — A coupled trade-off between quality attributes (e.g., consistency vs. availability vs. latency) on which the producer must choose a posture.
+- **Conformance** — Adherence to this specification, as defined in §5.
+- **Verification** — The process of checking that evidence supports a claim. Out of scope for this version.
+
+---
+
+## §3 Conformance language
+
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **NOT RECOMMENDED**, **MAY**, and **OPTIONAL** in this document are to be interpreted as described in BCP 14 ([RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) and [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)) when, and only when, they appear in all capitals, as shown here.
+
+The same keywords appearing in lowercase in this document are not normative; they are used in their plain-English sense.
+
+---
+
+## §4 Threat model
+
+SAM exists to address a specific class of failure mode in modern software supply: the visual signals that once distinguished a production-grade system from a weekend prototype have collapsed. Stack choice, deployment pipeline, and surface polish no longer correlate with design maturity. A consumer — human or AI — cannot tell from inspection which signals are load-bearing.
+
+SAM is a producer-signed declaration that restores those signals explicitly. The threats it addresses, and the threats it does not, are enumerated below.
+
+### §4.1 Threats SAM addresses
+
+**T1 — Production-grade impersonation.** Software with weak design properties (no concurrency model, no failure-mode design, no security architecture) is mistaken for production-ready because its surface signals match those of mature systems.
+*Mitigation:* a producer-signed manifest declares which quality attributes have been specified, declared, or verified, and which are honestly unspecified. The default (`status: unspecified`) is informative absence; consumers learn what was *not* designed for as well as what was.
+
+**T2 — Operational envelope inference.** Consumers cannot tell, from a deployable, whether it was designed for one user or many; whether it scales horizontally; whether it expects internet access or runs isolated; whether it requires root or runs unprivileged.
+*Mitigation:* `envelope` declares each of these as a structured field. Outside the envelope, behavior is undefined by the producer's own assertion.
+
+**T3 — Tension hiding.** Distributed systems require choosing sides on CAP/PACELC, on observability cost vs. resolution, on test-suite coverage vs. maintainability. Producers often don't declare their posture, leaving consumers to discover the trade-off during an incident.
+*Mitigation:* `tensionsDeclared` makes the posture and rationale explicit at design time.
+
+**T4 — Citation drift.** Informal claims like "we're SOC 2 compliant" or "WCAG AA" travel in marketing copy without machine-readable substrate. Consumers cannot verify them programmatically.
+*Mitigation:* `industryRefs[]` structures the citation (`standard`, `version`, `conformance`, `referenceUri`); `evidence[]` provides URIs to the verification artifacts.
+
+**T5 — Composition opacity.** A product is many services; a service is many artifacts. A consumer reading a manifest at the wrong layer will misinterpret what they see (a service-layer claim of "horizontal scaling" does not imply each constituent artifact is independently scalable).
+*Mitigation:* `subject.layer` declares granularity explicitly. `subject.components[]` makes composition explicit.
+
+**T6 — Hidden third-party dependencies.** Modern software is heavily composed from external services (identity, payment, observability, infrastructure). A consumer cannot evaluate operational risk — what breaks when a dependency goes down, where data flows, what jurisdiction holds it — by inspecting binaries or even reading documentation. Regulated consumers (EU DORA, NIS2, sector-specific regimes) are required to maintain ICT third-party registers and reverse-engineer this information today.
+*Mitigation:* `envelope.dependencies[]` declares operational dependencies with criticality, failure mode, data flow, jurisdiction, and substitutability. Each entry can cite DORA Art. 28, NIS2, ISO/IEC 27036, or NIST SP 800-161 anchors via `industryRefs[]`.
+
+### §4.2 Threats SAM does NOT address
+
+**N1 — Lying producers.** A SAM is what the producer says. A signed declaration of `verified` with fabricated evidence is detectable only by inspecting the evidence. SAM is no defense against a determined liar; its contribution is to make the lie *attributable* to a specific producer key in retrospect.
+
+**N2 — Code-execution-time vulnerabilities.** A SAM is a design artifact, not a runtime guard. It tells consumers what to expect; it does not prevent attacks against running code.
+
+**N3 — Stale claims.** A SAM issued 18 months ago may not reflect the current code. The `producer.validFor` field is advisory; consumers SHOULD check freshness against the artifact's current digest before relying on the manifest.
+
+**N4 — Missing claims.** Honest absence (`status: unspecified`) is not a vulnerability. Over-claiming is. SAM cannot enforce honest claim-making; it can only make over-claiming auditable.
+
+**N5 — Out-of-band channels.** A producer may make different claims in marketing materials, contract language, or sales decks than in the SAM. SAM cannot reconcile these; it provides one signed source of truth for the format and leaves reconciliation to the consumer's contract.
+
+**N6 — License compliance.** Out of scope. Use SBOM (CycloneDX or SPDX) referenced via `subject.sbomRef`.
+
+**N7 — Build provenance.** Out of scope. Use SLSA / in-toto attestations as siblings to the SAM.
+
+**N8 — Vulnerability disclosure.** Out of scope. Use CSAF / VEX as siblings.
+
+### §4.3 Trust assumptions
+
+Consumers of a SAM rely on the following trust assumptions, none of which SAM itself enforces:
+
+- The producer controls the signing key chain identified in the DSSE envelope.
+- The signing key chain is resolvable to an organizational identity that the consumer can evaluate (e.g., via Sigstore Fulcio identities, GPG web of trust, or organizational PKI).
+- `industryRefs[].standard` strings are interpretable in good faith. Ambiguous strings (e.g., bare `"27001"`) are non-conforming per §5.
+- Evidence URIs may resolve to producer-controlled infrastructure; consumers SHOULD assess whether independent third-party attestation is required for high-stakes decisions.
+- Two SAMs covering the same subject digest with different claims indicate either a producer error, a key compromise, or an out-of-band update; consumers MUST treat conflicting signed claims as an integrity failure to be resolved before adoption.
+
+---
+
+## §5 Definition of a conforming SAM
+
+This section defines what it means for a SAM to conform to this specification. Conformance is defined in two tiers: **conforming** and **strictly conforming**. Tooling MUST follow the consumer rules below.
+
+### §5.1 Conformance requirements (producers)
+
+A SAM is **conforming** if all of the following hold:
+
+1. The document is well-formed JSON per [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259).
+2. The document validates against the JSON Schema published at the schema's `$id` for the declared `manifestVersion`.
+3. The document is signed via DSSE per the [in-toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) format, with `predicateType` equal to the canonical predicate type URI for the declared `manifestVersion` (for v0.3: `https://software-architecture-spec.github.io/sam/v0.3`).
+4. The DSSE signing key chain MUST be resolvable to an identity that asserts authority over the producer named in `producer.name`.
+5. When `subject.layer` is `artifact`, `subject.digest` MUST be present and bind the manifest to the artifact via the in-toto Statement `subject` field.
+6. When any `qualityAttributeClaim.status` is `verified`, at least one entry in `evidence[]` MUST be present for that claim.
+7. When any `qualityAttributeClaim.status` is `declared` or `verified`, the `summary` field MUST be present and non-empty for that claim.
+8. All URI fields (`evidence[].uri`, `informationalRefs[]`, `subject.sbomRef`, `subject.components[].manifestUri`, `industryRefs[].referenceUri`, `producer.contact` if a URI) MUST be syntactically valid URIs per [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+9. All `industryRefs[].standard` values MUST be interpretable as references to publicly identifiable standards. A bare numeric string (e.g., `"27001"`), an unqualified abbreviation (e.g., `"CSF"` without context), or a private vendor identifier is non-conforming.
+10. `producer.issuedAt` MUST be a valid RFC 3339 / ISO 8601 timestamp not in the future relative to the producer's local clock at signing time.
+
+A SAM is **strictly conforming** if, additionally:
+
+11. All `tensionsDeclared[].tension` values are either well-known identifiers from the registry maintained alongside this specification (a future deliverable) or use the `x:` prefix for vendor-specific tensions.
+12. No object contains property keys not defined in the schema, except for `x-*` extension keys at the eight permitted locations enumerated in §7.2. The schema enforces this via `patternProperties: { "^x-": {} }` at those locations and `additionalProperties: false` everywhere else.
+13. `producer.validFor` is present, and the consumption time falls within `[producer.issuedAt, producer.issuedAt + producer.validFor]`.
+
+### §5.2 Producer responsibilities
+
+A producer:
+
+- MUST NOT set `status: verified` for a claim without at least one corresponding `evidence` URI.
+- MUST NOT set `status: verified` for a claim that has not actually been verified by the producer or a party the producer relies on. This is a moral, not technical, requirement; the signature attributes any violation to the producer's key.
+- SHOULD use `status: unspecified` honestly when no claim is being made. Honest absence is preferable to fabricated assurance.
+- SHOULD use `status: not_applicable` only when the attribute is genuinely irrelevant to the artifact (e.g., `interactionCapability` for a backend API with no UI surface).
+- SHOULD avoid overstating conformance levels in `industryRefs[].conformance`. A self-attestation to NIST SSDF practices is not equivalent to a third-party SOC 2 Type 2 audit; the `conformance` string SHOULD make this distinction visible.
+- SHOULD re-issue the SAM when the underlying artifact's content digest changes. A SAM whose claims no longer match the artifact's current state is a correctness hazard.
+
+### §5.3 Consumer responsibilities
+
+A consumer of a SAM:
+
+- MUST reject documents that fail items §5.1.1 (well-formed JSON), §5.1.2 (schema validation), §5.1.3 (DSSE envelope), §5.1.4 (signing identity), §5.1.5 (digest binding), §5.1.6 (evidence-when-verified), §5.1.7 (summary-when-declared-or-verified), or §5.1.10 (timestamp validity).
+- SHOULD reject documents that fail items §5.1.8 (URI validity) or §5.1.9 (interpretable standard strings) unless operating in a trusted context where the producer is independently known.
+- SHOULD warn when a SAM is conforming but not strictly conforming.
+- MUST treat two SAMs with the same `subject.digest` and conflicting claims as an integrity failure requiring resolution before adoption.
+- SHOULD consult `producer.validFor` to assess freshness. A SAM beyond its validity window MAY still be informative but SHOULD be treated as advisory only.
+- MAY accept non-conforming documents in trusted contexts (e.g., internal-use software from a known team) but MUST flag the non-conformance to downstream consumers.
+
+### §5.4 Tooling responsibilities
+
+A validator:
+
+- MUST report which conformance items in §5.1 a document fails.
+- MUST distinguish between "fails conformance" and "fails strict conformance."
+- SHOULD report producer-responsibility violations (§5.2) when detectable from the document alone (e.g., a claim with `status: verified` and no `evidence`), but the validator's authority extends only to what is visible in the document; it cannot adjudicate whether evidence URIs themselves substantiate the claims they support.
+
+A signer:
+
+- MUST produce a DSSE envelope per §5.1.3.
+- MUST set `predicateType` to the canonical URI for the manifest version being signed.
+- SHOULD record the signing identity in a manner that allows downstream consumers to resolve §5.1.4.
+
+A viewer:
+
+- SHOULD render `unspecified` claims with the same visual weight as `declared` and `verified` claims, so that consumers see honest absence rather than scrolling past it.
+- SHOULD distinguish `declared` (no evidence) from `verified` (evidence present) in the visual surface.
+
+---
+
+## §6 Versioning
+
+This specification, the JSON Schema, and the predicate type URI are versioned together. Consumers MUST be able to rely on stable compatibility guarantees across versions; producers MUST be able to upgrade with predictable cost.
+
+### §6.1 Version identifiers
+
+SAM uses [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) (`MAJOR.MINOR.PATCH`).
+
+- The current version is **0.3**.
+- While `MAJOR` is `0`, this specification is a working draft. Breaking changes MAY occur in minor releases.
+- The first `MAJOR` ≥ 1 release is the first stable version. From that point on, the compatibility commitments in §6.3 apply strictly.
+
+The version a manifest claims to conform to is declared in the top-level `manifestVersion` field. The same version appears in:
+
+- The JSON Schema's `$id` path component (e.g., `.../v0.3/schema.json`).
+- The in-toto predicate type URI (e.g., `https://software-architecture-spec.github.io/sam/v0.3`).
+
+These three values MUST agree for a given manifest.
+
+### §6.2 What each version-bump tier means
+
+A change is **PATCH** when it is editorial and does not change the schema, the predicate type URI, or any normative requirement. Examples: typo fixes, prose clarifications, non-normative example updates. Tools MUST treat the patched and unpatched versions as interchangeable. Tools that pin to a `MAJOR.MINOR.PATCH` triple MUST also accept any later `PATCH` of the same `MAJOR.MINOR`.
+
+A change is **MINOR** when it is additive: new optional fields, new optional sub-objects, new well-known enum values added to open enums. A manifest that conformed to `MAJOR.MINOR_OLD` MUST conform to any later `MAJOR.MINOR_NEW` of the same `MAJOR`. New consumers MUST be able to read manifests issued against earlier minor versions of the same major version.
+
+A change is **MAJOR** when it is breaking: removing a field, narrowing a value space, changing the meaning of an existing field, changing required-vs-optional status, or changing the predicate type URI. A manifest issued at one `MAJOR` MAY be invalid under the schema of the next `MAJOR`. The predicate type URI changes (e.g., `sam/v1` → `sam/v2`).
+
+### §6.3 Compatibility commitments
+
+For any two versions `A` and `B` of this specification where `A < B`:
+
+- **Same MAJOR:** A consumer of version `B` MUST accept manifests claiming any earlier minor or patch version of the same major. A producer using version `A` MUST be able to upgrade to `B` without re-issuing existing manifests, except by their own choice.
+- **Different MAJOR:** A consumer of version `B` MUST NOT silently treat a manifest claiming version `A` as a `B` manifest. The consumer SHOULD either reject the manifest, accept it in compatibility mode (validating against the `A` schema), or surface the version mismatch to the operator.
+
+### §6.4 Predicate type URI policy
+
+The canonical predicate type URI for this specification is of the form:
+
+    https://software-architecture-spec.github.io/sam/v<MAJOR>[.<MINOR>]
+
+For pre-1.0 working drafts, the URI includes the minor version (e.g. `v0.2`, `v0.3`). For stable versions (`MAJOR ≥ 1`), the URI includes only the major version (`v1`, `v2`); minor versions of a stable major share a single URI because they are backward compatible by §6.3.
+
+A signing tool MUST NOT set `predicateType` to a URI different from the one declared in `manifestVersion`. A verifier MUST treat such a mismatch as an integrity failure.
+
+### §6.5 Deprecation
+
+A field, value, or sub-object MAY be marked **deprecated** in a minor version. Deprecation does not remove the field; it signals intent to remove it in the next major version. Deprecated fields:
+
+- MUST continue to validate against the schema until the next major version.
+- MUST list a successor field, value, or pattern in their description, or MUST state "removed without replacement" with rationale.
+- MUST NOT be reintroduced under the same name with different semantics in a future version.
+
+Producers SHOULD migrate away from deprecated fields. Consumers MUST continue to accept deprecated fields in any minor version of the major in which they were deprecated.
+
+### §6.6 Changes in v0.3
+
+v0.3 is a 0.x working-draft release. Per §6.1, breaking changes MAY occur in minor releases while `MAJOR` is `0`; v0.3 uses that allowance for exactly one change. Everything else is additive (new optional fields).
+
+- **Additive (optional):** `intent.deliveryForm`, `intent.architecturalStyle`, `intent.architecturalPatterns[]`; `envelope.persistence.{replication, consistency, backup, encryption}`; `envelope.instantiation.{ordering, idempotency, conflictResolution}`. All are `experimental` (§8).
+- **Breaking:** `envelope.dependencies[].type` — a single `experimental` enum that mixed *delivery form* with *functional role* — is replaced by two optional fields: `deliveryForm` (drawn from the same vocabulary as `intent.deliveryForm`) and `role` (`identity_provider`, `payment_provider`, `data_provider`, `communication_provider`, `observability_provider`, `ml_model_provider`, `other`). A v0.2 manifest that set `dependencies[].type` does not validate under v0.3 and must migrate (`type: saas` → `deliveryForm: saas`; `type: payment_provider` → `role: payment_provider`). v0.2 manifests remain valid under the frozen v0.2 schema and URIs per §6.3.
+
+---
+
+## §7 Extensibility
+
+SAM is intentionally narrow. Producers will need fields this specification does not provide. To allow growth without forking the schema, SAM follows the convention used by OpenAPI, CycloneDX, and Kubernetes: a vendor extension namespace.
+
+### §7.1 The `x-*` extension namespace
+
+Custom keys MUST be prefixed with `x-` (lowercase `x` followed by a hyphen). Custom keys SHOULD include a stable namespace identifier after the prefix to avoid collisions:
+
+    x-<namespace>-<key>
+
+Examples: `x-acme-deploy-region`, `x-redhat-fips-mode`, `x-internal-cost-center`.
+
+The namespace `x-sam-` is **reserved** for future additions defined by working-group consensus on this specification. Producers MUST NOT use `x-sam-` for vendor-specific extensions.
+
+### §7.2 Where extensions are permitted
+
+Custom `x-*` keys MAY appear on the following objects:
+
+- Each `qualityAttributeClaim` (the inner object containing `status`, `summary`, `evidence`, `industryRefs`, `informationalRefs`).
+- Each ISO 25010 characteristic object inside `qualityAttributes` (the object containing `overall` and `subCharacteristics`).
+- Each entry in the `extensions` block.
+- Each entry in `tensionsDeclared[]`.
+- Each entry in `industryRefs[]` and each entry in `evidence[]`.
+- The `producer` object.
+- Each entry in `subject.components[]`.
+
+Custom `x-*` keys MUST NOT appear on the following objects, where unknown fields would change conformance-relevant semantics:
+
+- The top-level manifest object.
+- `subject` (signing-relevant; changes here would invalidate the digest binding).
+- `manifestVersion`.
+- `intent`, `envelope`, and any of `envelope`'s sub-blocks (`throughput`, `scaling`, `instantiation`, `privilege`, `network`, `persistence`). Producers needing additional operational claims SHOULD use the `extensions` block instead.
+
+As of v0.2, the JSON Schema implements this policy: `patternProperties: { "^x-": {} }` is declared on each of the eight permitted objects above. Forbidden objects retain `additionalProperties: false`. Validators will reject `x-*` keys placed on forbidden objects (e.g., on `envelope.network`); validators will accept them on permitted objects without requiring schema knowledge of the specific key.
+
+### §7.3 What extensions may not do
+
+An extension MUST NOT:
+
+- Contradict any normative claim made elsewhere in the manifest. (E.g., `x-acme-multi-tenant: true` on a manifest with `intent.audience: single_user` is non-conforming.)
+- Be required for a consumer to evaluate the manifest's normative content.
+- Be relied on by a verifier as a basis for conformance decisions.
+
+An extension MAY:
+
+- Carry vendor-specific operational metadata (deployment regions, cost-center attribution, internal ticket IDs).
+- Carry experimental fields the producer expects to propose for inclusion in a future minor version.
+- Reference internal evidence stores, internal namespaces, or internal taxonomies.
+
+### §7.4 Tooling expectations
+
+- A validator MUST accept any `x-*` key on a permitted object without error.
+- A re-emitting tool (e.g., one that reads a manifest, modifies it, and writes it back) SHOULD preserve unknown `x-*` keys it does not recognize, to avoid silent loss of producer intent.
+- A viewer SHOULD render unknown `x-*` keys distinctly from normative fields, so consumers do not mistake them for spec-defined claims.
+
+---
+
+## §8 Stability
+
+Not every field in the schema carries the same maturity. Some are well-grounded in established standards (the `qualityAttributes` keys come from ISO/IEC 25010:2023). Some are intentionally exploratory (the `extensions` block holds quality concerns ISO 25010 doesn't yet model cleanly — observability, data lifecycle, internationalization). Consumers need to know which is which to plan their reliance.
+
+### §8.1 Stability tiers
+
+Every field defined by this specification is in exactly one of three tiers:
+
+- **stable** — The field, its name, and its semantics will not change except in a `MAJOR` version bump. Tools MAY rely on it indefinitely within a major version.
+- **experimental** — The field exists, but its name, structure, value space, or semantics MAY change in any `MINOR` version. Tools MAY use it but SHOULD be prepared for change.
+- **deprecated** — The field is scheduled for removal in the next `MAJOR` version. Tools MUST continue to accept it until that version. Producers SHOULD migrate. The deprecation notice MUST cite a successor or state "removed without replacement."
+
+### §8.2 Default tier in v0
+
+For this draft, **all fields defined by this specification are `experimental`** unless explicitly marked otherwise. The first `MAJOR ≥ 1` release will mark the foundational set as `stable`. Consumers using v0 SHOULD plan for minor-version churn.
+
+### §8.3 How fields declare their stability
+
+In the JSON Schema, a field's stability tier is declared in its `description` text using the convention:
+
+    Stability: stable | experimental | deprecated [— <notes>]
+
+Where `<notes>` MAY include a successor reference (`see x.y.z`), a deprecation rationale, or expected-change scope. Fields without an explicit annotation default to the version's default tier (`experimental` while `MAJOR` is `0`; `stable` after).
+
+As of v0.2, the schema surfaces stability via two complementary mechanisms: every field's `description` is prefixed with `Stability: <tier>. ` for human readers, and the schema also attaches `x-sam-stability: "stable"` as a sibling of `description` on stable fields for tools that prefer a structured keyword. The `x-sam-stability` keyword is descriptive only — it has no validation behavior in v0.x, and Draft 2020-12 validators ignore it as an unknown keyword. A top-level `$comment` in the schema documents the keyword.
+
+### §8.4 Promotion and demotion
+
+A field MAY be promoted from `experimental` to `stable` in any minor version. Promotion is non-breaking by definition.
+
+A field MAY be demoted from `stable` to `deprecated` in any minor version. Demotion is non-breaking; the field continues to validate. Removal of a deprecated field requires a major version bump (§6.5).
+
+A field MUST NOT move from `experimental` to `deprecated` without an intervening promotion to `stable` or a major version bump. (Rationale: producers should not be punished for using a field the spec said was experimental; the path to removal goes through stable.)
+
+---
+
+## §9 SAM Levels
+
+A conforming SAM (per §5.1) is binary — it conforms or it doesn't. But producers and consumers also need a vocabulary for *how much* a SAM tells them. SLSA established this pattern for build provenance with L0–L3; this section does the same for design intent.
+
+A subject is at exactly one SAM level at any time. Levels are cumulative — L3 implies L2 implies L1.
+
+### §9.1 Level definitions
+
+**L0 — No manifest.**
+
+No SAM exists for the subject. The default state of most software today.
+
+L0 is named explicitly so consumers have a clear word for "we cannot evaluate this artifact." A consumer encountering L0 software has no producer-signed declaration of intent, envelope, or quality attributes; everything must be inferred.
+
+*Cost to producer:* zero. *Leverage for consumer:* none. *Compliance posture under DORA / NIS2 / SOC 2:* the consumer must reverse-engineer.
+
+**L1 — Conforming.**
+
+A SAM exists for the subject, satisfies §5.1 conformance, and is signed and bound to its subject per §5.1.3–5.
+
+Claims may be `unspecified`, `declared`, `verified`, or `not_applicable` — including all `unspecified`. Honest absence is encouraged.
+
+*What L1 tells a consumer:* the producer has authored a SAM that says what the subject is, the operational envelope it was designed for, and which quality attributes the producer has thought about. For unspecified attributes, the consumer knows what the producer has *not* claimed; for `not_applicable`, the consumer knows the attribute is irrelevant by design.
+
+*Cost to producer:* one authoring pass plus signing infrastructure. *Leverage for consumer:* a stable, machine-readable starting point for evaluation. *Compliance posture:* enables initial intake; deeper evaluation typically requires L2+.
+
+**L2 — Anchored.**
+
+L1, plus: every `qualityAttributeClaim` with `status: declared` or `verified` carries at least one `industryRefs[]` entry. Every `envelope.dependencies[]` entry of `criticality: critical` or `important` carries at least one `industryRefs[]` entry (typically a DORA, NIS2, ISO/IEC 27036, or NIST SP 800-161 cite).
+
+*What L2 tells a consumer:* every non-trivial claim points to a publicly identifiable standard the consumer recognizes. Auditors and procurement teams can run automated mapping from SAM claims to their internal control catalogs without manual translation.
+
+*Cost to producer:* per-claim research effort to identify the right industry anchor — the cost is one-time and the result is reusable across releases. *Leverage for consumer:* automation across procurement / audit / vendor risk surfaces. *Compliance posture:* sufficient for many third-party-risk processes that need machine-readable hooks.
+
+**L3 — Evidenced.**
+
+L2, plus: every `qualityAttributeClaim` with `status: verified` carries at least one `evidence[]` entry. `tensionsDeclared` is populated for every cross-attribute tension the subject's design touches (at minimum, the well-known tensions named in §5.1.11 that apply). `producer.validFor` is present and the manifest is consumed within its validity window. Maps to the spec's §5.1 *strict conformance* tier.
+
+*What L3 tells a consumer:* every verified claim points to a verification artifact the consumer can fetch and audit (load test report, security scan, accessibility audit, chaos test, etc.); every architectural trade-off the subject makes is named with its posture and rationale; the manifest is fresh.
+
+*Cost to producer:* the verification cost is real (load tests, audits, chaos tests must actually be run) but the marginal cost of declaring already-performed verification is small — the bottleneck is doing the verification, not declaring it. *Leverage for consumer:* the manifest substantially substitutes for direct vendor due-diligence in regulated contexts. *Compliance posture:* most third-party risk regimes accept evidenced declarations for non-critical providers; for critical providers, supplements rather than replaces independent verification.
+
+### §9.2 Determining a SAM's level
+
+A consumer determines a SAM's level by:
+
+1. If no signed SAM is available for the subject: **L0**.
+2. If a SAM is available and conforms per §5.1.1–10: at least **L1**.
+3. If additionally every non-`unspecified`/`not_applicable` claim has `industryRefs[]` and every critical/important dependency has `industryRefs[]`: at least **L2**.
+4. If additionally every `verified` claim has `evidence[]`, every applicable tension is in `tensionsDeclared`, and the manifest is within `producer.validFor`: **L3**.
+
+Consumers SHOULD report the determined level alongside any conformance result. Tooling MAY surface levels visually (badges, dashboards) — the level is the maturity signal a consumer reads at a glance.
+
+### §9.3 What levels do NOT measure
+
+SAM levels measure *what the producer has declared and substantiated*, not *whether the software is good*. An L3 SAM declaring "P95 latency is 30 seconds" is L3-conforming; whether 30 seconds is acceptable is a consumer judgment outside SAM's scope. Levels are about evaluability, not quality.
+
+A consumer SHOULD NOT treat L3 as a quality stamp. L3 means "the producer has done the work to let you evaluate"; evaluation itself remains the consumer's responsibility.
+
+---
+
+## §10 Quality characteristic definitions
+
+The schema's `qualityAttributes` keys correspond one-to-one with the ISO/IEC 25010:2023 quality characteristic *names*, and each characteristic's `subCharacteristics` keys correspond with the standard's sub-characteristic *names*. This section gives each name a plain-English definition in the SAM project's own words, so the meaning of every schema key is unambiguous when it appears in a manifest.
+
+The definitions here are not a paraphrase of the standard restated for its own sake. Each entry adds material ISO does not contain: it is framed through SAM's declaration model (honest absence via `unspecified` / `not_applicable`, the `declared` / `verified` status ladder, and the evidence and `industryRefs[]` a producer would attach), and every sub-characteristic carries an illustrative producer claim written for SAM. Where a characteristic reads differently depending on how the software is delivered — an operated service (SaaS), a shipped product (COTS/on-prem), or an embedded SDK/library — the entry makes that cut explicit, because the same schema key asserts different things depending on who operates the software. The delivery form is declared in `intent.deliveryForm` and named canonically in [`/registry/delivery-forms.json`](../registry/delivery-forms.json); the same vocabulary types an operational dependency via `envelope.dependencies[].deliveryForm` (with `role` carrying the functional axis), so a subject's delivery form and a dependency's delivery form read alike. The intent is a SAM authoring reference, not a substitute standard.
+
+**Provenance and independence.** These definitions are original to the SAM project and licensed CC-BY-4.0. They are *informative*: they fix what SAM's schema keys mean in a manifest. They are **not** a reproduction, translation, or derivative of the ISO/IEC 25010:2023 standard text, and they are not a substitute for it — for the authoritative quality model, consult the ISO standard. Where SAM's wording differs from ISO's, the ISO standard is authoritative for *interpretation of the model*; this section is authoritative only for *what the SAM schema's keys mean when they appear in a manifest*.
+
+SAM is an independent project and is not affiliated with, endorsed by, or a product of ISO or IEC. "ISO" and "IEC" are trademarks of their respective organizations; ISO/IEC 25010 is referenced here nominatively, to align SAM's vocabulary with a quality model that procurement and audit already recognize.
+
+### §10.1 functionalSuitability
+
+The degree to which the software does what it is supposed to do — provides functions that meet stated and implied user needs under specified conditions of use.
+
+Sub-characteristics:
+
+1. **completeness** — Whether the software covers all the functions its target users need; missing capabilities are honest absences (`status: not_applicable` or `unspecified`), not silent gaps. *Example claim*: "All onboarding workflows specified in the HR Tech requirements doc are implemented."
+2. **correctness** — Whether the functions produce right results within agreed accuracy. *Declared as:* what "right" is measured against — a test-vector set, a reference implementation, or a conformance suite; `verified` points at that artifact. *Example claim*: "Tax calculations match HMRC test vectors to the cent." `[evidence: conformance-run URI]`
+3. **appropriateness** — Whether the offered functions actually facilitate the user's task (vs. complete-but-irrelevant functionality). *Example claim*: "Onboarding flow optimized for time-to-first-pay-period, not for IT ticket throughput."
+
+### §10.2 performanceEfficiency
+
+Performance relative to the resources used under stated conditions — how the software behaves under load and how efficiently it uses CPU, memory, disk, and network. ISO 25010's spelling (`timeBehaviour`, British) is preserved as the schema key.
+
+**Where this lives vs. `envelope`.** `envelope.throughput` and `envelope.scaling` state the *design target* — the operational envelope the software was built for (target/max RPS, latency SLOs, concurrency, scaling axis). `qualityAttributes.performanceEfficiency` is the graded *claim* about meeting that envelope: it carries `status`, `evidence[]`, and `industryRefs[]`. The envelope is the spec; the quality attribute is the report card against it. Put the canonical numbers in `envelope.throughput` and reference them from the claim `summary` — don't maintain two competing sources of truth.
+
+**Operating model decides what a claim *is* (SaaS vs COTS).** This axis governs all three sub-characteristics:
+
+- **Operated software** (SaaS / managed service; typically `subject.layer` = `service` or `product`, producer runs it) expresses performanceEfficiency as **SLOs it engineers to and measures** — percentile latencies and throughput per component/service, plus the scaling posture that holds them. `verified` means production SLI dashboards or a load test against the as-run topology. Pairs with `envelope.serviceLevels` and `envelope.scaling`.
+- **Shipped software** (COTS / on-prem / library / appliance; typically `subject.layer` = `artifact` or `product`, the consumer runs it) cannot promise an SLO on hardware it does not own. It instead ships **sizing guidance per transaction type**: the resource cost of each supported operation and tested ceilings on a **named reference configuration**, so the consumer can size for their own workload mix. `verified` means a published benchmark on a stated reference config. For this characteristic a COTS `not_applicable` is dishonest — the truthful posture is `declared` with a sizing model, or `unspecified`.
+
+**Measurement discipline (every claim here).** A latency number without the load it was measured at is meaningless — always state **percentiles (P50/P95/P99) under a defined concurrency or RPS**, never an average. Saturation (queue depth, pool exhaustion), not utilization, is the leading indicator of degradation. Little's Law (`concurrency ≈ throughput × latency`) ties the three sub-characteristics together and is a quick consistency check across a set of claims. Anchor via `industryRefs[]`: Google SRE "Four Golden Signals" (latency, traffic, errors, saturation), the USE method (utilization, saturation, errors) for `resourceUtilization`, OpenTelemetry semantic conventions for how the signals are emitted.
+
+Sub-characteristics:
+
+1. **timeBehaviour** — Response-time behavior under defined load.
+   - *Declared as:* percentiles under a stated load, referencing `envelope.throughput` for the target. If latency is coupled to a consistency choice, declare the matching `tensionsDeclared` entry (`cap_pacelc`): does the P95 assume strong or eventual consistency, and what staleness window?
+   - *Example (SaaS):* "P95 < 200 ms, P99 < 450 ms at 500 RPS sustained; verified nightly against production topology." `[evidence: load-test report URI]`
+   - *Example (COTS):* "On the reference config (8 vCPU / 16 GiB): a `bulk-import` transaction is P95 < 1.2 s for 10k rows; `single-lookup` P95 < 15 ms. Latency scales with row count, not concurrency, up to 32 in-flight imports."
+
+2. **resourceUtilization** — CPU, memory, disk, and network consumed per unit of work.
+   - *Declared as:* for SaaS, the scaling unit (work served per instance/core) and the autoscaling trigger; for COTS, the **per-transaction-type** resource cost that feeds a sizing model. Watch the security-budget tension (`security_performance_isolation`) — if the target must absorb input validation and isolation overhead, say so (see §10.6).
+   - *Example (SaaS):* "~100 RPS of mixed traffic per 1 vCPU + 1 GiB; horizontal autoscale at 70% CPU; stateless instances behind an LB."
+   - *Example (COTS):* "Per 1,000 `search` transactions: ~2.5 CPU-seconds, ~40 MB peak heap, ~8 MB egress. Size ingest workers at ~1 core per 400 sustained `import` TPS."
+
+3. **capacity** — Maximum sustainable throughput before quality degrades — the tested saturation point, not a hopeful ceiling.
+   - *Declared as:* the knee where SLOs start to break, plus the **scaling boundary** (the load at which the current architecture needs redesign — shard / CQRS / event sourcing), so consumers see designed headroom rather than current load. State it per reference config for COTS.
+   - *Example (SaaS):* "Sustainable to 2,000 RPS/cluster at target P95; degrades past ~2,400 (connection-pool saturation). Redesign boundary ~5,000 RPS → read-replica split planned."
+   - *Example (COTS):* "Validated to 1,500 concurrent sessions / 300 `import` TPS on the reference config; above that, throughput plateaus and P99 climbs. No tested data beyond 3× reference hardware."
+
+### §10.3 compatibility
+
+The ability of the software to operate alongside other software in the same environment, and to exchange information with it through stable contracts.
+
+**Distribution form decides what "compatible" means.** A **service/API** exchanges information over the network — compatibility is a versioned wire contract. An **SDK/library** is linked into a host process — compatibility is API/ABI stability and not fighting the host for resources. A **COTS/appliance** shares the consumer's host or cluster — compatibility is resource and configuration co-tenancy. Declare against the form your `subject.layer` implies.
+
+Sub-characteristics:
+
+1. **coExistence** — Operates without harmful interference with other software sharing the same compute, storage, or network.
+   - *Declared as:* what the software assumes it may share and what it must not (ports, global config, filesystem paths, runtime versions, connection budgets). For an SDK this is host-process citizenship (no global mutable state, bounded threads/memory, no captured transitive-dependency versions); for a service/COTS it is namespace/cluster co-tenancy.
+   - *Example (service/COTS):* "Runs in a Kubernetes namespace alongside other internal portals; no shared state, no fixed host ports, connection pool capped at 20 to respect a shared Postgres limit."
+   - *Example (SDK):* "Thread-safe, allocates no global state, pins no transitive dependency versions; safe to embed in a host already using gRPC 1.6x."
+
+2. **interoperability** — Exchanges information across system boundaries via stable, documented, machine-readable contracts a consumer can build against without reverse-engineering the implementation.
+   - *Declared as:* the contract artifact and its evolution rule. `verified` here means the contract is published and conformance-tested (contract tests), not merely that endpoints exist. Name the versioning strategy and what backward-compatibility means (additive-only, deprecation window, sunset dates). If downstream systems depend on the contract, its availability/latency commitments become operational obligations — state those in `envelope.serviceLevels`, not here. Anchor via `industryRefs[]`: OpenAPI 3.x, AsyncAPI, gRPC/protobuf, SemVer.
+   - *Example:* "All public endpoints conform to a published OpenAPI 3.1.0 contract; additive-only within a MAJOR, 180-day deprecation window; event consumers must tolerate unknown fields (tolerant reader). Contract tests gate CI." `[evidence: contract-test run URI]`
+
+### §10.4 interactionCapability
+
+The degree to which the software supports humans in interacting with it. Renamed from "Usability" in ISO 25010:2023 to acknowledge that interaction spans more than ease-of-use — understandability, error recovery, accessibility, and engagement.
+
+**Who the "user" is decides how — and whether — this applies.** For a **GUI/end-user product**, the user is a human at a screen and every sub-characteristic reads literally. For an **SDK/library/CLI/API**, the user is the *integrating developer* and these reinterpret as developer experience — discoverability, time-to-first-successful-call, guardrails against misuse, self-explaining errors. For a **fully headless artifact** with neither surface, `status: not_applicable` across the characteristic is the honest posture, not a gap to paper over.
+
+Sub-characteristics:
+
+1. **appropriatenessRecognizability** — Whether users can quickly tell whether the software is the right tool for their task.
+   - *Declared as:* GUI = how fast task scope is communicated; SDK/API = whether the README/reference makes supported use cases and boundaries obvious before integration.
+   - *Example (GUI):* "Landing page communicates supported task scope within 5 seconds of first view."
+   - *Example (SDK):* "README states supported runtimes, the three core use cases, and explicit non-goals above the fold."
+
+2. **learnability** — How quickly a new user becomes effective.
+   - *Declared as:* GUI = time for a new user to complete a core task unaided; SDK/API = time-to-first-successful-call and whether the happy-path example runs as-is.
+   - *Example (GUI):* "New HR coordinators complete the certification flow in under 30 minutes without supervision."
+   - *Example (SDK):* "Documented quickstart yields a working call in under 10 minutes; copy-paste example compiles unmodified."
+
+3. **operability** — Ease and accuracy of routine use.
+   - *Declared as:* GUI = effort for common workflows; SDK/CLI = ergonomics of the common path (sensible defaults, composability, no required boilerplate).
+   - *Example (GUI):* "Common workflows completable in ≤4 clicks from the home dashboard."
+   - *Example (CLI):* "Default invocation needs no flags; every command supports `--json` for scripting."
+
+4. **userErrorProtection** — How well the software prevents mistakes and helps recover from them.
+   - *Declared as:* guardrails against destructive or invalid actions and the recovery path. For an SDK/API this is type-safety, validation-at-the-boundary, and reversibility — and note the security overlap: the API enforces the rule, the UI only hides the control (see §10.6).
+   - *Example (GUI):* "Destructive actions require confirmation; deleted records are recoverable for 30 days."
+   - *Example (SDK):* "Invalid argument combinations fail at call time with a typed error, never a silent partial write."
+
+5. **userEngagement** — Whether the interaction surface is pleasant or motivating to use. Most literal for end-user products; for infrastructure and SDKs the honest posture is often `not_applicable`. *Example (GUI):* "Workflow progress is visible on every page with completion percentage."
+
+6. **inclusivity** — Whether people with disabilities can use the software effectively; accessibility lives here in ISO 25010:2023.
+   - *Declared as:* the conformance target and how it was checked; `verified` needs an audit, not a self-assessment. Anchor via `industryRefs[]`: WCAG 2.2 A/AA/AAA, EN 301 549, Section 508.
+   - *Example:* "WCAG 2.2 AA conformance verified by annual third-party audit." `[evidence: audit report URI]`
+
+7. **userAssistance** — Help available when users get stuck.
+   - *Declared as:* GUI = inline help, runbooks, support paths; SDK/API = reference completeness, worked examples, and whether errors link to docs.
+   - *Example (GUI):* "Inline help on every form field; contextual runbook links from each error message."
+   - *Example (SDK):* "Every public symbol has reference docs with a runnable example; error messages carry a docs URL."
+
+8. **selfDescriptiveness** — Whether the software explains itself without external documentation — labels, prompts, and above all error messages.
+   - *Declared as:* whether an error names the failed precondition and the remediation, in both UI and API/CLI output.
+   - *Example:* "Error messages name the failed precondition and the remediation path; API errors use RFC 9457 problem+json."
+
+### §10.5 reliability
+
+How dependably the software performs its functions under stated conditions for a stated period of time — behavior under failure and recovery after it.
+
+**Operated vs shipped decides whether reliability is a measured outcome or a built-in capability.** For **operated software** (`saas`), the producer owns the outcome: availability SLO, error budget, DR-drill results, and incident history are all measurable against the as-run system, and `verified` points at them. Pairs with `envelope.serviceLevels` (availability, `rpoMinutes`/`rtoMinutes`, `incidentResponse`). For **shipped software** (`self_hosted_service`, `infrastructure`, `appliance`), the producer builds the *mechanisms* (failover, backup/restore tooling, graceful degradation) but the *consumer* achieves the actual numbers — availability and RPO/RTO depend on how it is deployed. A shipped-software claim describes tested recovery behavior and the HA model, not an operated SLO the producer cannot honor on someone else's infrastructure. For a **`library`**, reliability is fault-clean code — no state corruption or resource leaks on error, deterministic failure handling; `availability` and `recoverability` are usually the host's concern (`not_applicable`).
+
+Sub-characteristics:
+
+1. **faultTolerance** — Continuing to operate in the presence of faults (failed dependencies, network partitions, transient errors).
+   - *Declared as:* the degradation posture and the mechanisms behind it. Where fault behavior forks on the CAP boundary — stay available and serve stale, or stay consistent and reject — declare the matching `tensionsDeclared` entry (`cap_pacelc`).
+   - *Example (SaaS):* "Circuit breakers on all egress; workflows degrade gracefully when Workday is unreachable; during a primary-replica partition reads stay available (AP) and writes reject."
+   - *Example (library):* "No partial writes on error; every failure path releases its resources; all operations are idempotent and safe to retry."
+
+2. **recoverability** — Restoring data and resuming operation after failure within stated RPO/RTO targets.
+   - *Declared as:* for operated software, the achieved RPO/RTO and how they were validated (put the numbers in `envelope.serviceLevels`); for shipped software, the backup/restore *tooling and tested restore time*, since the consumer sets the cadence and owns the achieved RPO.
+   - *Example (SaaS):* "Hourly Postgres backups; RPO 1 h / RTO 4 h verified quarterly via DR drill." `[evidence: DR-drill report URI]`
+   - *Example (self-hosted):* "Ships point-in-time restore tooling; a 100 GB restore completes in <20 min on the reference config. Backup cadence and retention are operator-configured."
+
+3. **availability** — Fraction of time the software is operational and accessible against a defined service window.
+   - *Declared as:* an operated outcome — only meaningful when the producer runs it. For `saas`, state it and put the SLO in `envelope.serviceLevels`. For shipped software, availability is the consumer's result; the producer instead claims the **HA capability** that enables it (redundancy model, tested failover time), not a percentage it cannot control. Honest posture for a plain `library` or `cli_tool`: `not_applicable`.
+   - *Example (SaaS):* "99.9% availability during business hours, best-effort overnight; measured against the public status page."
+   - *Example (infrastructure):* "Supports HA via leader election; tested automatic failover < 30 s on loss of the primary. Achieved availability depends on operator topology."
+
+4. **maturity** — Dependability in normal operation — the absence of latent defects that surface under load or over time.
+   - *Declared as:* the track record that stands in for "it has been shaken out" — production tenure, defect/incident rate, adoption. `verified` points at an incident record or public issue history.
+   - *Example:* "In production for 3 years across 40 tenants; <1 P1 incident per quarter; public issue tracker."
+
+### §10.6 security
+
+Protection of information and functions so that authorized actors have appropriate access while unauthorized access is prevented.
+
+**Who enforces the control decides what a claim asserts.** For **operated software** (SaaS), the producer enforces controls at runtime and `verified` means pentest results, runtime configuration, and audit evidence against the as-run system. For **shipped software** (COTS/on-prem), the producer supplies secure defaults plus a hardening guide and the *consumer* enforces — a claim states what the artifact does out of the box vs. what the deployment must add. For an **embedded SDK/library**, security means not introducing a vulnerability into the host: safe defaults, no injection sinks, no secret mishandling — the consuming application owns the perimeter. A principle across all three: authorization is enforced per resource at the API, never assumed from a UI that merely hides the control.
+
+Sub-characteristics:
+
+1. **confidentiality** — Data is accessible only to those authorized to see it.
+   - *Declared as:* the data classification and the controls per class (encryption at rest / in transit, tenant isolation). Note the observability tension (`observability_pii`) — rich structured logs can leak PII into lower-trust log stores; declare the redaction posture.
+   - *Example:* "PII encrypted at rest with KMS, TLS 1.3 in transit; tenant_id enforced at the query layer; PII fields redacted from logs."
+
+2. **integrity** — Data and functions are protected from unauthorized modification. *Example claim*: "All write operations signed; tampering is detectable via audit-log hash chain."
+
+3. **nonRepudiation** — Actions can be proven attributable to a specific actor *to a third party after the fact* — the evidentiary bar (signed, tamper-evident). Stronger than `accountability`. *Example claim*: "Audit log signed daily and exported to corporate SIEM; records cannot be deleted by application code."
+
+4. **accountability** — Each action can be *internally* traced to the actor who performed it — the operational bar (who did what, when). It rises to `nonRepudiation` only when the trail is tamper-evident enough to stand as external proof. *Example claim*: "Every write logged with actor, timestamp, and before/after values to an append-only store."
+
+5. **authenticity** — Actors — and, where relevant, data and artifacts — are verified to be what they claim to be.
+   - *Declared as:* the identity mechanism at each boundary (human, service-to-service, and for shipped artifacts, supply-chain provenance). `verified` names the mechanism and where it is enforced, not just that "auth exists." Anchor via `industryRefs[]`: OIDC, OAuth 2.x, SAML, mTLS, WebAuthn/passkeys; SLSA / in-toto for artifact authenticity.
+   - *Example (SaaS):* "OIDC at the edge; mTLS between services; no local password store; sessions rotate on privilege change."
+   - *Example (shipped artifact):* "Releases are cosign-signed with SLSA build-L3 provenance published; consumers verify the signature before install."
+
+6. **resistance** — The software withstands attacks (malformed input, replay, injection, brute-force).
+   - *Declared as:* the validation-at-every-boundary posture and the assurance activities behind it. Anchor via `industryRefs[]`: OWASP ASVS L1/L2/L3, NIST SP 800-218.
+   - *Example:* "Input validated at every API endpoint regardless of client checks; annual pentest, no critical findings; SAST in CI; OWASP ASVS L2." `[evidence: pentest report URI]`
+
+### §10.7 maintainability
+
+The ease with which the software can be modified to correct, improve, or adapt to changes.
+
+**Who maintains it decides whether this is a private or a purchased property.** For **closed SaaS**, maintainability is the producer's internal concern; consumers rarely see the source, so a coarse `overall` claim is often all that is meaningful. For **OSS, SDKs, and source-available / COTS-with-extensions**, maintainability is something the *consumer is buying into* — they will read, extend, test, and debug it — so the sub-characteristics carry real third-party weight and deserve `verified` evidence.
+
+Sub-characteristics:
+
+1. **modularity** — Components are decomposed so changes in one have minimal impact on others. *Example claim*: "Workflow steps are configuration-driven, not hardcoded; new step types added without touching the orchestration core."
+
+2. **reusability** — Components can be lifted into other contexts without dragging the whole system with them.
+   - *Declared as:* what is deliberately packaged for reuse (published modules, stable internal APIs) vs. what is application-specific. For an SDK this is the whole value proposition; for a leaf service it may honestly be `not_applicable`.
+   - *Example:* "Identity-handling utilities published as a versioned internal package, consumed by 3 other portals; the orchestration core is intentionally app-specific and not reusable."
+
+3. **analysability** — How easily the software can be diagnosed, understood, and measured. British-English spelling preserved from the standard. This is where **observability** folds in — ISO 25010 gives it no first-class home, so SAM carries the operational surface in `extensions.observability`; an analysability claim should reference it rather than restate it.
+   - *Declared as:* whether a maintainer can understand *and diagnose* the system — structured logs, correlation IDs, traces, decision records — ideally without reading source. Cross-reference `extensions.observability` for the runtime signals.
+   - *Example:* "Structured JSON logs with correlation IDs across services; per-endpoint latency/error dashboards; ADRs in `/docs/adr` explain every architectural decision. Production issues diagnosable from telemetry alone (see `extensions.observability`)."
+
+4. **modifiability** — Ease of making targeted changes without breaking adjacent behavior. *Example claim*: "85% behavioral test coverage; contract tests catch regressions at service boundaries."
+
+5. **testability** — How easily the software's behavior can be verified.
+   - *Declared as:* behavioral coverage (every endpoint, error path, and business rule has a test), not a line-coverage percentage — line coverage measures execution, not verified behavior. Beware the coverage↔maintainability tension (`test_suite_tension`): brittle implementation-coupled tests inflate the number while blocking refactors; contract and property-based tests survive refactors. `verified` should point at a test-report artifact.
+   - *Example:* "Every public endpoint has a contract test; every declared failure mode has a triggering test; property-based tests on the pricing rules; suite runs in <90 s in CI." `[evidence: test-report URI]`
+
+### §10.8 flexibility
+
+The ease with which the software can be adapted to different or changing environments, requirements, or scales. Renamed and broadened from "Portability" in ISO 25010:2023 to include adaptability and scalability.
+
+**Delivery form decides which sub-characteristics even apply.** For **consumer-operated software** (`self_hosted_service`, `library`, `cli_tool`, `infrastructure`, `appliance`), flexibility is a first-class purchase decision — the consumer chooses where and how to run it, so adaptability, installability, and replaceability all carry weight. For **operated software** (`saas`), the producer controls the environment: `installability` is `not_applicable` (nothing to install — you sign up), `adaptability` is the producer's internal concern, and only `scalability` (as an operated posture) and `replaceability` (can the customer leave?) matter to the consumer.
+
+Sub-characteristics:
+
+1. **adaptability** — Running in different environments (OSes, container runtimes, infrastructure profiles, language runtimes) without code changes.
+   - *Declared as:* the supported environment matrix. For shipped software this is the OS/arch/runtime support grid; for a `library`, the supported language/runtime versions and platforms; for `saas`, usually `not_applicable` to the consumer.
+   - *Example (self-hosted):* "Runs on Kubernetes (primary) or a VM (fallback); same image in both paths; linux/amd64 + linux/arm64."
+   - *Example (library):* "Supports Python 3.10–3.13 on CPython and PyPy; pure-Python, no native build step."
+
+2. **scalability** — Handling increasing load by scaling horizontally, vertically, or both. Distinct from `performanceEfficiency.capacity` (the *tested ceiling*): scalability is the *mechanism* for moving that ceiling.
+   - *Declared as:* the scaling model and its verified limit; cross-reference `envelope.scaling` and don't restate `capacity`. For `saas` this is the operated autoscaling posture; for shipped software it is the scaling topology the consumer can deploy (replicas, sharding, read replicas) and what has been tested.
+   - *Example (SaaS):* "Horizontal to 50 replicas verified; the upstream API rate limit is the bottleneck above 50 (see `performanceEfficiency.capacity`)."
+   - *Example (infrastructure):* "Scales via consistent-hash sharding; tested to 8 shards / 4 TB; adding a shard rebalances online."
+
+3. **installability** — Installing and uninstalling cleanly. Meaningful only for consumer-operated forms; `not_applicable` for `saas`.
+   - *Declared as:* the install/uninstall path, prerequisites, and whether uninstall is clean (leaves no state). Anchor via `industryRefs[]`: OCI Image Spec, Helm chart schema.
+   - *Example (self-hosted):* "Helm chart maintained for corporate K8s; documented prerequisites; uninstall removes all state by default."
+   - *Example (CLI):* "Single static binary, no runtime dependencies; install/uninstall are copy/delete; config lives in one XDG path."
+
+4. **replaceability** — Whether a consumer can swap the software for a similar offering without disruption — the anti-lock-in property.
+   - *Declared as:* what makes it replaceable — a standard contract/format, documented data export, or wire-protocol compatibility. Cross-reference `compatibility.interoperability` (§10.3) for the contract itself. Every system with consumers has a replaceability story, so prefer `declared` over `not_applicable` unless there genuinely are no consumers to disrupt.
+   - *Example (SaaS):* "Full data export via the public API (OpenAPI 3.1.0); no proprietary formats; documented offboarding runbook."
+   - *Example (infrastructure):* "Speaks the PostgreSQL wire protocol; a drop-in target for standard Postgres clients."
+
+### §10.9 safety
+
+Protection of human life, health, property, and the environment from harm caused by software behavior. New top-level characteristic in ISO 25010:2023; primarily relevant to safety-critical domains (automotive, medical, aviation, industrial control). For software with no safety-critical surface, `status: not_applicable` is the honest claim.
+
+Sub-characteristics:
+
+1. **operationalConstraint** — Operates only within bounded conditions; refuses to operate outside them. *Example claim*: "Insulin pump dosing capped at clinically validated maxima; commands outside range are rejected."
+2. **riskIdentification** — The software identifies and surfaces unsafe conditions. *Example claim*: "Continuous monitoring of voltage and current; thresholds raise alerts before damage threshold."
+3. **failSafe** — On failure, the software enters a state that minimizes harm. *Example claim*: "On power loss, traffic-light controller defaults all signals to flashing red."
+4. **hazardWarning** — Communicates hazards to users in time to act. *Example claim*: "Critical alarms reach the operator console within 100 ms; visual + audible."
+5. **safeIntegration** — When integrated with other systems, no new hazards are introduced. *Example claim*: "Functional-safety analysis published per IEC 61508 SIL-2; integration test matrix covers all sister-system interfaces."
+
+---
+
+## Open issues
+
+The following are deliberately deferred from this version of the specification:
+
+- **Authoring guide** — practical guidance for producers on what to populate per attribute and how to write honest summaries.
+- **Verification guide** — practical guidance for consumers on how to evaluate a SAM in different decision contexts.
+- **Lifecycle policy** — re-issuance, revocation, supersession.
+- **Tension identifier registry growth** — the v0.2 registry seeds the well-known set; longer-term curation, versioning, and contribution model still to define.
+- **Canonical-strings registry growth** — same as above for `industryRefs.standard`.
+- **`x-sam-stability` validation behavior** — currently descriptive; future versions may give it semantics (e.g., consumers reject manifests that promise `stable` and use `experimental` fields).
+- **Subject-aware DSSE binding for non-artifact layers** — service- and product-layer manifests have optional `subject.digest`; binding them to a subject identifier without a digest is currently underspecified.
+
+These will be addressed in subsequent iterations of this specification once §§1–9 stabilize.

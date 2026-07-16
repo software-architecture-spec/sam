@@ -1,7 +1,7 @@
 {
   "registry": "sam-delivery-forms",
-  "version": "0.1",
-  "description": "Well-known identifiers for how software is delivered and who operates it. The delivery form governs how a quality claim reads: the same qualityAttributes key asserts different things for software the producer runs (a measured SLO) versus software the consumer runs (a default plus sizing/hardening guidance). Referenced from SPECIFICATION.md §10; targets an intent.deliveryForm field in a future schema version. These IDs are the delivery-form subset of envelope.dependencies[].type (saas, self_hosted_service, infrastructure, library) — a subject's delivery form and a dependency's kind use the same vocabulary. envelope.dependencies[].type additionally carries functional-role values (payment_provider, identity_provider, data_provider, ...) that are NOT delivery forms; cli_tool and appliance are delivery forms that have no dependency-role counterpart. Source model (proprietary / open_source / source_available) is an orthogonal axis, not a delivery form — it affects the maintainability reading (§10.7), not who operates the software. Advisory, not schema-enforced.",
+  "version": "0.2",
+  "description": "Well-known identifiers for how software is delivered and who operates it. The delivery form governs how a quality claim reads: the same qualityAttributes key asserts different things for software the producer runs (a measured SLO) versus software the consumer runs (a default plus sizing/hardening guidance). Used by intent.deliveryForm (v0.3) and envelope.dependencies[].deliveryForm — a subject's delivery form and a dependency's delivery form share this one vocabulary. A dependency additionally carries envelope.dependencies[].role (identity_provider, payment_provider, data_provider, communication_provider, observability_provider, ml_model_provider, other) — the functional axis that v0.2's single 'type' enum mixed together with delivery form, split apart in v0.3. Source model (proprietary / open_source / source_available) is an orthogonal axis, not a delivery form — it affects the maintainability reading (§10.7), not who operates the software. Advisory, not schema-enforced.",
   "entries": [
     {
       "id": "saas",
@@ -37,7 +37,34 @@
       "operator": "consumer",
       "typical_layers": ["artifact"],
       "perimeter_owner": "consumer",
-      "claims_read_as": "Behavior of a tool the consumer runs locally or in CI. interactionCapability reads as developer experience: invocation ergonomics, sensible defaults, scriptability, and stable output / exit-code contracts. No envelope.dependencies[].type counterpart."
+      "claims_read_as": "A tool the consumer runs locally or in CI. interactionCapability reads as developer experience: invocation ergonomics, sensible defaults, scriptability, and stable output / exit-code contracts."
+    },
+    {
+      "id": "desktop_app",
+      "name": "Desktop application",
+      "aka": ["desktop app", "GUI application", "installed app"],
+      "operator": "consumer",
+      "typical_layers": ["artifact", "product"],
+      "perimeter_owner": "consumer",
+      "claims_read_as": "A GUI application the end user installs and runs on a desktop OS. interactionCapability reads as GUI end-user experience (the §10.4 GUI reading); the operating envelope is the user's own machine, so availability and performance are the consumer's environment, not a producer SLO."
+    },
+    {
+      "id": "mobile_app",
+      "name": "Mobile application",
+      "aka": ["mobile app", "iOS app", "Android app"],
+      "operator": "consumer",
+      "typical_layers": ["artifact", "product"],
+      "perimeter_owner": "shared",
+      "claims_read_as": "An app distributed through an app store and run on a mobile OS. Carries a distinct envelope: OS permission sandbox, store review/distribution, offline-first behavior, and battery/data constraints. interactionCapability reads as mobile GUI; privilege and much of security are governed by the OS permission model."
+    },
+    {
+      "id": "browser_extension",
+      "name": "Browser extension",
+      "aka": ["extension", "add-on", "browser plugin"],
+      "operator": "consumer",
+      "typical_layers": ["artifact"],
+      "perimeter_owner": "host browser",
+      "claims_read_as": "Runs inside a host browser: web-store distribution and review, host-page / content-script sandbox, and the browser's permission model. A hybrid of library (embedded in a host) and client app (end-user-facing); compatibility is against the browser extension APIs and their versioning."
     },
     {
       "id": "infrastructure",
@@ -46,7 +73,7 @@
       "operator": "consumer",
       "typical_layers": ["artifact", "service"],
       "perimeter_owner": "consumer",
-      "claims_read_as": "Software other software depends on and the consumer operates. Claims center on the operational envelope and capacity guidance; a component of this form typically appears in another producer's envelope.dependencies[] (as type: infrastructure). (Caddy is an example of this form.)"
+      "claims_read_as": "Software other software depends on and the consumer operates. Claims center on the operational envelope and capacity guidance; a component of this form typically appears in another producer's envelope.dependencies[] (as deliveryForm: infrastructure). (Caddy is an example of this form.)"
     },
     {
       "id": "appliance",
@@ -55,7 +82,7 @@
       "operator": "consumer",
       "typical_layers": ["artifact", "product"],
       "perimeter_owner": "shared",
-      "claims_read_as": "A sealed unit the consumer places but does not modify. The producer guarantees the internals as a whole; the consumer controls placement and operational context, not the components inside. Claims read as whole-unit guarantees plus the operational envelope the unit is certified for. No envelope.dependencies[].type counterpart."
+      "claims_read_as": "A sealed unit the consumer places but does not modify. The producer guarantees the internals as a whole; the consumer controls placement and operational context, not the components inside. Claims read as whole-unit guarantees plus the operational envelope the unit is certified for."
     }
   ]
 }

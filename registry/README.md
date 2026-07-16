@@ -6,7 +6,8 @@ Companion data files for the SAM specification. **Advisory only — not enforced
 
 - **`standards.json`** — canonical spellings of common values for `industryRefs.standard` across SAM manifests. Lets producers pick a stable spelling and lets consumers normalize aliases when analyzing many manifests. Modeled on the SPDX License List pattern.
 - **`tensions.json`** — well-known identifiers for `tensionsDeclared[].tension`, referenced from `SPECIFICATION.md §5.1.11`. Producers SHOULD use one of these IDs when the named tension applies; for domain-specific tensions, use the `x:` prefix.
-- **`delivery-forms.json`** — canonical identifiers for how software is delivered and who operates it (`saas`, `self_hosted_service`, `library`, `cli_tool`, `infrastructure`, `appliance`). Referenced from `SPECIFICATION.md §10`, where the delivery form governs how a quality claim reads — the same key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. These IDs are the delivery-form subset of `envelope.dependencies[].type` (so a subject's delivery form and a dependency's kind share one vocabulary); `dependencies[].type` additionally carries functional-role values that are not delivery forms. Targets an `intent.deliveryForm` field in a future schema version. Source model (proprietary / open_source / source_available) is an orthogonal axis, not a delivery form.
+- **`delivery-forms.json`** — canonical identifiers for how software is delivered and who operates it (`saas`, `self_hosted_service`, `library`, `cli_tool`, `desktop_app`, `mobile_app`, `browser_extension`, `infrastructure`, `appliance`). Referenced from `SPECIFICATION.md §10`, where the delivery form governs how a quality claim reads — the same key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. Used by `intent.deliveryForm` and `envelope.dependencies[].deliveryForm` (v0.3), which share this one vocabulary; a dependency additionally carries `role` (the functional axis that v0.2's `dependencies[].type` mixed in, split apart in v0.3). Source model (proprietary / open_source / source_available) is an orthogonal axis, not a delivery form.
+- **`patterns.json`** — well-known identifiers for `intent.architecturalPatterns[]` (`circuit_breaker`, `bulkhead`, `saga`, `cqrs`, `event_sourcing`, `outbox`, `repository`, …). Producers SHOULD use a registered ID when the pattern applies; for project-specific patterns, use the `x:` prefix. Advisory — the field is an open string array.
 
 ## Why advisory, not enforced
 
@@ -22,7 +23,7 @@ Tooling MUST NOT reject a SAM solely because it uses an unregistered string in `
 
 ## Shape
 
-Both registries are flat JSON files with `registry`, `version`, `description`, and an `entries[]` array. Per-entry shapes:
+The registries are flat JSON files with `registry`, `version`, `description`, and an `entries[]` array. Per-entry shapes:
 
 **`standards.json` entry:**
 
@@ -46,7 +47,9 @@ Both registries are flat JSON files with `registry`, `version`, `description`, a
 { "id": "...", "name": "...", "aka": ["..."], "operator": "producer|consumer|shared", "typical_layers": ["..."], "perimeter_owner": "...", "claims_read_as": "..." }
 ```
 
-`id` is the canonical delivery-form identifier (target value for a future `intent.deliveryForm`). `aka` lists common names that map to it (e.g. `SaaS`, `COTS`, `SDK`). `operator` is who runs the software (`producer`, `consumer`, or `shared`). `typical_layers` names the `subject.layer` values the form usually appears at. `perimeter_owner` names who owns the security/operational boundary. `claims_read_as` explains, for authors, how §10 quality claims should be interpreted for that form.
+`id` is the canonical delivery-form identifier (the value for `intent.deliveryForm` and `envelope.dependencies[].deliveryForm`, v0.3). `aka` lists common names that map to it (e.g. `SaaS`, `COTS`, `SDK`). `operator` is who runs the software (`producer`, `consumer`, or `shared`). `typical_layers` names the `subject.layer` values the form usually appears at. `perimeter_owner` names who owns the security/operational boundary. `claims_read_as` explains, for authors, how §10 quality claims should be interpreted for that form.
+
+**`patterns.json` entry:** same shape as `tensions.json` (`id`, `name`, `summary`, `cite`, `uri`, `applies_to`). `id` is the value that goes in `intent.architecturalPatterns[]`; `applies_to` names the `qualityAttributes` the pattern typically serves.
 
 ## Versioning
 

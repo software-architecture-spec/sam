@@ -4,16 +4,17 @@ This roadmap is **feedback-driven, not predetermined**. Everything below shifts 
 
 The stable target is **v1**. The path there is incremental minor releases that close gaps surfaced by real use.
 
-## Current release: v0.2
+## Current release: v0.3
 
-Live at `https://software-architecture-spec.github.io/sam/v0.2/`.
+Live at `https://software-architecture-spec.github.io/sam/v0.3/`.
 
-- Specification §§1–10 (Scope, Terminology, Conformance language, Threat model, Conforming SAM, Versioning, Extensibility, Stability, SAM Levels, **Definitions appendix**)
-- JSON Schema with `envelope.serviceLevels`, `intent.tenancy.dataResidency[]`, and `industryRefs[]` audit metadata (auditor / auditPeriod / dateAttested)
-- Open-content definitions in §10 covering all 9 ISO 25010 characteristics and ~40 sub-characteristics — SAM's own wording anchored to the ISO names and framed through SAM's declaration model (informative, not a reproduction of the ISO text)
-- Conformance corpus extended (positive + negative cases for the new fields)
+- **`intent.deliveryForm`** (9-value enum) — closes the §10 orphaned-guidance gap: the delivery-form axis §10.2–10.8 lean on is now declarable by producers.
+- **`intent.architecturalStyle`** (enum) and **`intent.architecturalPatterns[]`** (open string + `registry/patterns.json`).
+- **Storage detail** on `envelope.persistence` (replication / consistency / backup / encryption) and **concurrency detail** on `envelope.instantiation` (ordering / idempotency / conflictResolution).
+- **Breaking (§6.6):** `envelope.dependencies[].type` split into `deliveryForm` + `role`, so one delivery-form vocabulary serves both subject and dependency.
+- Conformance corpus extended for the new fields; `registry/patterns.json` added; `registry/delivery-forms.json` extended to 9 forms (adds `desktop_app`, `mobile_app`, `browser_extension`).
 
-v0.1 frozen at `/sam/v0.1/` and remains valid per §6.3 same-MAJOR compatibility.
+v0.1 and v0.2 frozen at their URIs per §6.3 same-MAJOR compatibility.
 
 ## Shipped in v0.2
 
@@ -25,11 +26,9 @@ These were the v0.2 candidates carried forward from the v0.1 review and now in t
 - **`industryRefs[]` audit-metadata enrichment** — optional `auditor`, `auditPeriod`, `dateAttested` on every `industryRefs` entry (qualityAttributes claims, dependencies, serviceLevels).
 - **Recommended open references** (`§1.5`) — Wikipedia ISO 25010, arc42 quality model, NIST SP 800-160 Vol. 1 as informational broadening for readers who want context beyond the §10 definitions.
 
-## Near-term — v0.3 candidates
+## Shipped in v0.3
 
-Drawn from a review of canonical systems-design literature (Release It! / DDIA / Fowler PEAA / SRE Book / Newman / Richards & Ford / Ousterhout) — each names a vocabulary producers and consumers commonly use that SAM has no slot for today.
-
-> **Critical path: `intent.deliveryForm` (below).** The v0.2 §10 flush-out made delivery form the load-bearing axis of §10.2–10.8 — how nearly every quality claim reads depends on whether the software is `saas` / `self_hosted_service` / `library` / `cli_tool` / `infrastructure` / `appliance`. But the field does not exist in the schema yet, so the normative §10 guidance keys off something an author cannot declare. Until `intent.deliveryForm` lands, that guidance is orphaned. This is the highest-priority v0.3 item, ahead of the literature-driven candidates.
+Drawn from a review of canonical systems-design literature (Release It! / DDIA / Fowler PEAA / SRE Book / Newman / Richards & Ford / Ousterhout) — each named a vocabulary producers and consumers commonly use that SAM had no slot for. All landed in v0.3; the descriptions below record the design.
 
 ### `architecturalStyle` (declarative)
 
@@ -67,15 +66,29 @@ Closes the gap that producers can't declare "this implements the circuit-breaker
 
 Expand §10 from definitions into a per-characteristic **SAM lens** — for each characteristic, ~3 lines of SAM-specific authoring guidance ISO structurally cannot have: how you declare it (typical `status` values, what a `verified` claim requires here, which `industryRefs[]` anchor it, whether the concept also lives in `envelope`/`extensions`) and what an honest claim looks like (when `not_applicable` is the truthful call). Evens out the thin entries (e.g. `compatibility.coExistence`, several `performanceEfficiency` subs) that still read close to a restatement, seeds the deferred Authoring Guide inline, and makes §10 decisively non-derivative of ISO. *(Substantially done — §10.2–10.8 now carry the SAM lens, grounded on the delivery-form taxonomy below; §10.1 (`correctness` fleshed) and §10.9 (`safety`, already domain-specific) were adequately concrete.)*
 
-### `intent.deliveryForm` — critical path
+### `intent.deliveryForm` — shipped in v0.3
 
-**Priority: highest of the v0.3 candidates.** §10.2–10.8 already depend on this axis; shipping the guidance in v0.2 without the field leaves that guidance orphaned until the field lands.
+Closed the §10 orphaned-guidance gap: §10.2–10.8 depend on this axis, and it is now a declarable field.
 
-A declared enum for how the software is delivered and who operates it — `saas` / `self_hosted_service` / `library` / `cli_tool` / `infrastructure` / `appliance`, seeded in `registry/delivery-forms.json`. This is the axis §10 already leans on: the same quality key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. Making it a first-class field lets consumers filter and lets tooling apply the right reading automatically. Source model (proprietary / open_source / source_available) is an orthogonal candidate field, not part of this enum.
+A hard enum for how the software is delivered and who operates it — `saas` / `self_hosted_service` / `library` / `cli_tool` / `desktop_app` / `mobile_app` / `browser_extension` / `infrastructure` / `appliance` (9 forms; the client-side family `cli_tool`/`desktop_app`/`mobile_app`/`browser_extension` was completed during implementation), documented in `registry/delivery-forms.json`. The same quality key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software; the field lets consumers filter and tooling apply the right reading automatically. Source model (proprietary / open_source / source_available) remains an orthogonal candidate field, not part of this enum (deferred to v0.4).
 
-The delivery-form IDs are deliberately the delivery-form subset of the shipped `envelope.dependencies[].type` enum (`saas`, `self_hosted_service`, `infrastructure`, `library`) so a subject's delivery form and a dependency's kind share one vocabulary. The clean end state: **split `envelope.dependencies[].type`** (currently `experimental`) **into `deliveryForm` + `role`** — `deliveryForm` drawn from this registry, `role` carrying the functional-provider values (`payment_provider`, `identity_provider`, `data_provider`, `communication_provider`, `observability_provider`, `ml_model_provider`). That removes the axis-mixing in the current enum and makes one delivery-form vocabulary serve both subject and dependency.
+The **`envelope.dependencies[].type` split** shipped alongside it: `type` (a single enum that mixed delivery form with functional role) was replaced by `deliveryForm` (the shared vocabulary above) + `role` (`identity_provider`, `payment_provider`, `data_provider`, `communication_provider`, `observability_provider`, `ml_model_provider`, `other`) — the one breaking change in v0.3 (§6.6). One delivery-form vocabulary now serves both subject and dependency.
 
-Landing the field adds conformance cases: a positive case with a valid `deliveryForm`, and — if `deliveryForm` follows the advisory registry pattern used for `tensionsDeclared.tension` and `industryRefs.standard` (free string, not a hard enum) — an unknown value as `schema-valid-but-spec-nonconforming` (mirroring `fail-11-unknown-tension`), not a hard reject.
+Chosen as a **hard enum** (consistent with `intent.audience` and the former `dependencies[].type`), so an unknown value is `invalid` rather than advisory. Conformance: `pass-with-deliveryform`, `fail-14-bad-deliveryform`, `pass-with-dependency-role`, `fail-17-dependency-legacy-type`.
+
+## Near-term — v0.4 candidates
+
+### Gradability for `architecturalStyle` / `architecturalPatterns`
+
+Surfaced by the v0.3 review. Unlike `qualityAttributes` (which carry `status` / `evidence[]`), `intent.architecturalStyle` and `intent.architecturalPatterns[]` are bare producer self-assertions with no evidentiary ladder and no consumer-facing consequence — a producer can claim `architecturalPatterns: ["circuit_breaker"]` with nothing backing it, and an AI agent may over-trust it. They risk becoming vanity metadata in a spec whose thesis is honest, gradable claims. (`deliveryForm` is exempt — it is verifiable-by-consequence: it changes how every quality claim reads and is cross-checkable against `subject.layer` and `serviceLevels`.) *Options for v0.4:* give the two fields a `declared` / `verified` + `evidence[]` shape like `qualityAttributes`, or explicitly scope them as informational (non-graded) in the spec so consumers don't over-read them.
+
+### `serverless_function` delivery form
+
+The review flagged FaaS (Lambda-style code the consumer deploys but a cloud operator runs) as not mapping cleanly onto `saas` or `self_hosted_service`. Partly covered today by `intent.architecturalStyle: serverless`, so it is a defensible omission — revisit if authoring feedback shows the delivery/operation split matters for FaaS.
+
+### `intent.sourceModel`
+
+Deferred from v0.3: the orthogonal `proprietary` / `open_source` / `source_available` axis that governs the maintainability reading (§10.7). Candidate as a separate optional enum on `intent`.
 
 ## Spec content deferred from v0.2
 
