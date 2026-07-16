@@ -67,7 +67,9 @@ Expand §10 from definitions into a per-characteristic **SAM lens** — for each
 
 ### `intent.deliveryForm`
 
-A declared enum for how the software is delivered and who operates it — `hosted_service` / `self_hosted_app` / `library` / `cli_tool` / `infrastructure_component` / `appliance`, seeded in `registry/delivery-forms.json`. This is the axis §10 already leans on: the same quality key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. Making it a first-class field lets consumers filter and lets tooling apply the right reading automatically. Source model (proprietary / open_source / source_available) is an orthogonal candidate field, not part of this enum.
+A declared enum for how the software is delivered and who operates it — `saas` / `self_hosted_service` / `library` / `cli_tool` / `infrastructure` / `appliance`, seeded in `registry/delivery-forms.json`. This is the axis §10 already leans on: the same quality key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. Making it a first-class field lets consumers filter and lets tooling apply the right reading automatically. Source model (proprietary / open_source / source_available) is an orthogonal candidate field, not part of this enum.
+
+The delivery-form IDs are deliberately the delivery-form subset of the shipped `envelope.dependencies[].type` enum (`saas`, `self_hosted_service`, `infrastructure`, `library`) so a subject's delivery form and a dependency's kind share one vocabulary. The clean end state: **split `envelope.dependencies[].type`** (currently `experimental`) **into `deliveryForm` + `role`** — `deliveryForm` drawn from this registry, `role` carrying the functional-provider values (`payment_provider`, `identity_provider`, `data_provider`, `communication_provider`, `observability_provider`, `ml_model_provider`). That removes the axis-mixing in the current enum and makes one delivery-form vocabulary serve both subject and dependency.
 
 ## Spec content deferred from v0.2
 
