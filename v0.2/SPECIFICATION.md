@@ -77,7 +77,7 @@ ISO/IEC 25010:2023 is the normative anchor for `qualityAttributes`, but the stan
 - **arc42 quality model** — `https://quality.arc42.org/` — an open practitioner's guide to defining and measuring software quality, organized along ISO 25010 lines.
 - **NIST SP 800-160 Volume 1** — `https://csrc.nist.gov/pubs/sp/800/160/v1/r1/final` — open systems-engineering guidance complementary to (not a substitute for) the quality model.
 
-This specification's **§10 — Quality characteristic definitions** reproduces every ISO 25010:2023 characteristic and sub-characteristic name in its own CC-BY-4.0 wording with example producer claims. A reader without paywalled ISO access can use SAM normatively from §10 alone; the Wikipedia / arc42 / NIST references are informational broadening, not prerequisites.
+This specification's **§10 — Quality characteristic definitions** gives SAM's own plain-English definition for each characteristic and sub-characteristic, using the ISO/IEC 25010:2023 *names* as the canonical vocabulary, with example producer claims. Those definitions are original to the SAM project (CC-BY-4.0), are informative, and are not a reproduction or replacement of the ISO standard text — §10 fixes what SAM's schema keys mean; for the authoritative quality model, consult ISO/IEC 25010:2023. The Wikipedia / arc42 / NIST references are informational broadening, not prerequisites.
 
 ---
 
@@ -454,9 +454,13 @@ A consumer SHOULD NOT treat L3 as a quality stamp. L3 means "the producer has do
 
 ## §10 Quality characteristic definitions
 
-The schema's `qualityAttributes` keys correspond one-to-one with ISO/IEC 25010:2023 quality characteristics, and each characteristic's `subCharacteristics` keys correspond with the standard's sub-characteristics. ISO 25010:2023 is paywalled. This section reproduces every characteristic and sub-characteristic name with a CC-BY-4.0 definition in plain English plus an illustrative producer claim. A reader without ISO access can use SAM normatively from this section alone.
+The schema's `qualityAttributes` keys correspond one-to-one with the ISO/IEC 25010:2023 quality characteristic *names*, and each characteristic's `subCharacteristics` keys correspond with the standard's sub-characteristic *names*. This section gives each name a plain-English definition in the SAM project's own words, so the meaning of every schema key is unambiguous when it appears in a manifest.
 
-The wording here is the SAM project's own and is not a translation or derivative of the ISO standard text. Where the wording differs from any reader's recollection of ISO 25010, the ISO standard remains authoritative for *interpretation*; this section is authoritative for *what the SAM schema's keys mean when they appear in a manifest*.
+The definitions here are not a paraphrase of the standard restated for its own sake. Each entry adds material ISO does not contain: it is framed through SAM's declaration model (honest absence via `unspecified` / `not_applicable`, the `declared` / `verified` status ladder, and the evidence and `industryRefs[]` a producer would attach), and every sub-characteristic carries an illustrative producer claim written for SAM. The intent is a SAM authoring reference, not a substitute standard.
+
+**Provenance and independence.** These definitions are original to the SAM project and licensed CC-BY-4.0. They are *informative*: they fix what SAM's schema keys mean in a manifest. They are **not** a reproduction, translation, or derivative of the ISO/IEC 25010:2023 standard text, and they are not a substitute for it — for the authoritative quality model, consult the ISO standard. Where SAM's wording differs from ISO's, the ISO standard is authoritative for *interpretation of the model*; this section is authoritative only for *what the SAM schema's keys mean when they appear in a manifest*.
+
+SAM is an independent project and is not affiliated with, endorsed by, or a product of ISO or IEC. "ISO" and "IEC" are trademarks of their respective organizations; ISO/IEC 25010 is referenced here nominatively, to align SAM's vocabulary with a quality model that procurement and audit already recognize.
 
 ### §10.1 functionalSuitability
 

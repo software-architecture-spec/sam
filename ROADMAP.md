@@ -10,7 +10,7 @@ Live at `https://software-architecture-spec.github.io/sam/v0.2/`.
 
 - Specification §§1–10 (Scope, Terminology, Conformance language, Threat model, Conforming SAM, Versioning, Extensibility, Stability, SAM Levels, **Definitions appendix**)
 - JSON Schema with `envelope.serviceLevels`, `intent.tenancy.dataResidency[]`, and `industryRefs[]` audit metadata (auditor / auditPeriod / dateAttested)
-- Open-content definitions in §10 covering all 9 ISO 25010 characteristics and ~40 sub-characteristics — SAM is now usable without paywalled ISO access
+- Open-content definitions in §10 covering all 9 ISO 25010 characteristics and ~40 sub-characteristics — SAM's own wording anchored to the ISO names and framed through SAM's declaration model (informative, not a reproduction of the ISO text)
 - Conformance corpus extended (positive + negative cases for the new fields)
 
 v0.1 frozen at `/sam/v0.1/` and remains valid per §6.3 same-MAJOR compatibility.
@@ -19,7 +19,7 @@ v0.1 frozen at `/sam/v0.1/` and remains valid per §6.3 same-MAJOR compatibility
 
 These were the v0.2 candidates carried forward from the v0.1 review and now in the schema:
 
-- **Definitions appendix** (`SPECIFICATION.md §10`) — all 9 ISO 25010 characteristics and 40 sub-characteristics defined in our own CC-BY-4.0 wording with example producer claims. Closes the paywalled-ISO gap.
+- **Definitions appendix** (`SPECIFICATION.md §10`) — all 9 ISO 25010 characteristics and 40 sub-characteristics defined in SAM's own CC-BY-4.0 wording, anchored to the ISO names and framed through SAM's declaration model, with example producer claims. Informative, not a reproduction or replacement of the ISO text.
 - **`envelope.serviceLevels`** (service/product-layer only; `if/then` enforces) — `availability`, `rpoMinutes` / `rtoMinutes`, `supportWindow`, `incidentResponse` keyed by severity, `vulnerabilityPatch` keyed by severity, `industryRefs[]`.
 - **`intent.tenancy.dataResidency[]`** — string array; ISO 3166 codes, regional groupings, cloud regions, or producer-defined options.
 - **`industryRefs[]` audit-metadata enrichment** — optional `auditor`, `auditPeriod`, `dateAttested` on every `industryRefs` entry (qualityAttributes claims, dependencies, serviceLevels).
@@ -61,6 +61,10 @@ Closes the gap that producers can't declare "this implements the circuit-breaker
 
 `envelope.instantiation.mode` today covers singleton / multi_instance / leader_elected / sharded. v0.3 candidates: ordering guarantees (none / per-key / total), idempotency claims, conflict-resolution model (last-write-wins / CRDT / application-defined).
 
+### §10 → authoring reference
+
+Expand §10 from definitions into a per-characteristic **SAM lens** — for each characteristic, ~3 lines of SAM-specific authoring guidance ISO structurally cannot have: how you declare it (typical `status` values, what a `verified` claim requires here, which `industryRefs[]` anchor it, whether the concept also lives in `envelope`/`extensions`) and what an honest claim looks like (when `not_applicable` is the truthful call). Evens out the thin entries (e.g. `compatibility.coExistence`, several `performanceEfficiency` subs) that still read close to a restatement, seeds the deferred Authoring Guide inline, and makes §10 decisively non-derivative of ISO.
+
 ## Spec content deferred from v0.2
 
 Carried forward unchanged into v0.3+:
@@ -99,7 +103,7 @@ These came out of consumer-side review and design-pattern coverage analysis. Eac
 - ✅ **Data residency of the subject itself** — landed as `intent.tenancy.dataResidency[]`.
 - ✅ **Audit metadata on `industryRefs[]`** — landed as optional `auditor` / `auditPeriod` / `dateAttested` fields.
 - ✅ **SLA / SLO surface** — landed as `envelope.serviceLevels` (service/product layer only).
-- ✅ **ISO 25010 paywall dependency** — closed via `SPECIFICATION.md §10` definitions appendix and §1.5 open companions. SAM is now usable from §10 alone without paywalled ISO access.
+- ✅ **ISO 25010 access dependency** — addressed via `SPECIFICATION.md §10` (SAM's own definitions, anchored to the ISO names and framed through SAM's declaration model) plus §1.5 open companions. §10 is informative; the ISO standard remains authoritative for the model.
 
 **Open / v0.3 candidates:**
 
