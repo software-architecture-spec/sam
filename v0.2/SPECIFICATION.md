@@ -456,7 +456,7 @@ A consumer SHOULD NOT treat L3 as a quality stamp. L3 means "the producer has do
 
 The schema's `qualityAttributes` keys correspond one-to-one with the ISO/IEC 25010:2023 quality characteristic *names*, and each characteristic's `subCharacteristics` keys correspond with the standard's sub-characteristic *names*. This section gives each name a plain-English definition in the SAM project's own words, so the meaning of every schema key is unambiguous when it appears in a manifest.
 
-The definitions here are not a paraphrase of the standard restated for its own sake. Each entry adds material ISO does not contain: it is framed through SAM's declaration model (honest absence via `unspecified` / `not_applicable`, the `declared` / `verified` status ladder, and the evidence and `industryRefs[]` a producer would attach), and every sub-characteristic carries an illustrative producer claim written for SAM. The intent is a SAM authoring reference, not a substitute standard.
+The definitions here are not a paraphrase of the standard restated for its own sake. Each entry adds material ISO does not contain: it is framed through SAM's declaration model (honest absence via `unspecified` / `not_applicable`, the `declared` / `verified` status ladder, and the evidence and `industryRefs[]` a producer would attach), and every sub-characteristic carries an illustrative producer claim written for SAM. Where a characteristic reads differently depending on how the software is delivered — an operated service (SaaS), a shipped product (COTS/on-prem), or an embedded SDK/library — the entry makes that cut explicit, because the same schema key asserts different things depending on who operates the software. These delivery forms are named canonically in [`/registry/delivery-forms.json`](../registry/delivery-forms.json). The intent is a SAM authoring reference, not a substitute standard.
 
 **Provenance and independence.** These definitions are original to the SAM project and licensed CC-BY-4.0. They are *informative*: they fix what SAM's schema keys mean in a manifest. They are **not** a reproduction, translation, or derivative of the ISO/IEC 25010:2023 standard text, and they are not a substitute for it — for the authoritative quality model, consult the ISO standard. Where SAM's wording differs from ISO's, the ISO standard is authoritative for *interpretation of the model*; this section is authoritative only for *what the SAM schema's keys mean when they appear in a manifest*.
 
@@ -469,42 +469,98 @@ The degree to which the software does what it is supposed to do — provides fun
 Sub-characteristics:
 
 1. **completeness** — Whether the software covers all the functions its target users need; missing capabilities are honest absences (`status: not_applicable` or `unspecified`), not silent gaps. *Example claim*: "All onboarding workflows specified in the HR Tech requirements doc are implemented."
-2. **correctness** — Whether the functions produce right results within agreed accuracy. *Example claim*: "Tax calculations match HMRC test vectors to the cent."
+2. **correctness** — Whether the functions produce right results within agreed accuracy. *Declared as:* what "right" is measured against — a test-vector set, a reference implementation, or a conformance suite; `verified` points at that artifact. *Example claim*: "Tax calculations match HMRC test vectors to the cent." `[evidence: conformance-run URI]`
 3. **appropriateness** — Whether the offered functions actually facilitate the user's task (vs. complete-but-irrelevant functionality). *Example claim*: "Onboarding flow optimized for time-to-first-pay-period, not for IT ticket throughput."
 
 ### §10.2 performanceEfficiency
 
-Performance relative to the resources used under stated conditions. Captures how the software behaves under load and how efficiently it uses CPU, memory, disk, and network.
+Performance relative to the resources used under stated conditions — how the software behaves under load and how efficiently it uses CPU, memory, disk, and network. ISO 25010's spelling (`timeBehaviour`, British) is preserved as the schema key.
+
+**Where this lives vs. `envelope`.** `envelope.throughput` and `envelope.scaling` state the *design target* — the operational envelope the software was built for (target/max RPS, latency SLOs, concurrency, scaling axis). `qualityAttributes.performanceEfficiency` is the graded *claim* about meeting that envelope: it carries `status`, `evidence[]`, and `industryRefs[]`. The envelope is the spec; the quality attribute is the report card against it. Put the canonical numbers in `envelope.throughput` and reference them from the claim `summary` — don't maintain two competing sources of truth.
+
+**Operating model decides what a claim *is* (SaaS vs COTS).** This axis governs all three sub-characteristics:
+
+- **Operated software** (SaaS / managed service; typically `subject.layer` = `service` or `product`, producer runs it) expresses performanceEfficiency as **SLOs it engineers to and measures** — percentile latencies and throughput per component/service, plus the scaling posture that holds them. `verified` means production SLI dashboards or a load test against the as-run topology. Pairs with `envelope.serviceLevels` and `envelope.scaling`.
+- **Shipped software** (COTS / on-prem / library / appliance; typically `subject.layer` = `artifact` or `product`, the consumer runs it) cannot promise an SLO on hardware it does not own. It instead ships **sizing guidance per transaction type**: the resource cost of each supported operation and tested ceilings on a **named reference configuration**, so the consumer can size for their own workload mix. `verified` means a published benchmark on a stated reference config. For this characteristic a COTS `not_applicable` is dishonest — the truthful posture is `declared` with a sizing model, or `unspecified`.
+
+**Measurement discipline (every claim here).** A latency number without the load it was measured at is meaningless — always state **percentiles (P50/P95/P99) under a defined concurrency or RPS**, never an average. Saturation (queue depth, pool exhaustion), not utilization, is the leading indicator of degradation. Little's Law (`concurrency ≈ throughput × latency`) ties the three sub-characteristics together and is a quick consistency check across a set of claims. Anchor via `industryRefs[]`: Google SRE "Four Golden Signals" (latency, traffic, errors, saturation), the USE method (utilization, saturation, errors) for `resourceUtilization`, OpenTelemetry semantic conventions for how the signals are emitted.
 
 Sub-characteristics:
 
-1. **timeBehaviour** — Latency and response-time behavior under defined load. British-English spelling preserved from the standard. *Example claim*: "P95 response < 200 ms at 500 RPS."
-2. **resourceUtilization** — How much CPU, memory, disk, network the software consumes per unit of work. *Example claim*: "Service handles 100 RPS per 1 vCPU + 1 GiB RAM."
-3. **capacity** — Maximum sustainable throughput before quality degrades. *Example claim*: "Sustainable to 2,000 RPS per cluster; above that, behavior is undefined."
+1. **timeBehaviour** — Response-time behavior under defined load.
+   - *Declared as:* percentiles under a stated load, referencing `envelope.throughput` for the target. If latency is coupled to a consistency choice, declare the matching `tensionsDeclared` entry (`cap_pacelc`): does the P95 assume strong or eventual consistency, and what staleness window?
+   - *Example (SaaS):* "P95 < 200 ms, P99 < 450 ms at 500 RPS sustained; verified nightly against production topology." `[evidence: load-test report URI]`
+   - *Example (COTS):* "On the reference config (8 vCPU / 16 GiB): a `bulk-import` transaction is P95 < 1.2 s for 10k rows; `single-lookup` P95 < 15 ms. Latency scales with row count, not concurrency, up to 32 in-flight imports."
+
+2. **resourceUtilization** — CPU, memory, disk, and network consumed per unit of work.
+   - *Declared as:* for SaaS, the scaling unit (work served per instance/core) and the autoscaling trigger; for COTS, the **per-transaction-type** resource cost that feeds a sizing model. Watch the security-budget tension (`security_performance_isolation`) — if the target must absorb input validation and isolation overhead, say so (see §10.6).
+   - *Example (SaaS):* "~100 RPS of mixed traffic per 1 vCPU + 1 GiB; horizontal autoscale at 70% CPU; stateless instances behind an LB."
+   - *Example (COTS):* "Per 1,000 `search` transactions: ~2.5 CPU-seconds, ~40 MB peak heap, ~8 MB egress. Size ingest workers at ~1 core per 400 sustained `import` TPS."
+
+3. **capacity** — Maximum sustainable throughput before quality degrades — the tested saturation point, not a hopeful ceiling.
+   - *Declared as:* the knee where SLOs start to break, plus the **scaling boundary** (the load at which the current architecture needs redesign — shard / CQRS / event sourcing), so consumers see designed headroom rather than current load. State it per reference config for COTS.
+   - *Example (SaaS):* "Sustainable to 2,000 RPS/cluster at target P95; degrades past ~2,400 (connection-pool saturation). Redesign boundary ~5,000 RPS → read-replica split planned."
+   - *Example (COTS):* "Validated to 1,500 concurrent sessions / 300 `import` TPS on the reference config; above that, throughput plateaus and P99 climbs. No tested data beyond 3× reference hardware."
 
 ### §10.3 compatibility
 
-The ability of the software to operate alongside other software in the same environment, and to exchange information with them through stable contracts.
+The ability of the software to operate alongside other software in the same environment, and to exchange information with it through stable contracts.
+
+**Distribution form decides what "compatible" means.** A **service/API** exchanges information over the network — compatibility is a versioned wire contract. An **SDK/library** is linked into a host process — compatibility is API/ABI stability and not fighting the host for resources. A **COTS/appliance** shares the consumer's host or cluster — compatibility is resource and configuration co-tenancy. Declare against the form your `subject.layer` implies.
 
 Sub-characteristics:
 
-1. **coExistence** — Operates without harmful interference with other software sharing the same compute / storage / network. *Example claim*: "Runs in a Kubernetes namespace alongside other internal portals; no shared state, no port collisions."
-2. **interoperability** — Exchanges information across system boundaries via stable, documented contracts. *Example claim*: "All public endpoints conform to OpenAPI 3.1.0 with backward compatibility across minor versions."
+1. **coExistence** — Operates without harmful interference with other software sharing the same compute, storage, or network.
+   - *Declared as:* what the software assumes it may share and what it must not (ports, global config, filesystem paths, runtime versions, connection budgets). For an SDK this is host-process citizenship (no global mutable state, bounded threads/memory, no captured transitive-dependency versions); for a service/COTS it is namespace/cluster co-tenancy.
+   - *Example (service/COTS):* "Runs in a Kubernetes namespace alongside other internal portals; no shared state, no fixed host ports, connection pool capped at 20 to respect a shared Postgres limit."
+   - *Example (SDK):* "Thread-safe, allocates no global state, pins no transitive dependency versions; safe to embed in a host already using gRPC 1.6x."
+
+2. **interoperability** — Exchanges information across system boundaries via stable, documented, machine-readable contracts a consumer can build against without reverse-engineering the implementation.
+   - *Declared as:* the contract artifact and its evolution rule. `verified` here means the contract is published and conformance-tested (contract tests), not merely that endpoints exist. Name the versioning strategy and what backward-compatibility means (additive-only, deprecation window, sunset dates). If downstream systems depend on the contract, its availability/latency commitments become operational obligations — state those in `envelope.serviceLevels`, not here. Anchor via `industryRefs[]`: OpenAPI 3.x, AsyncAPI, gRPC/protobuf, SemVer.
+   - *Example:* "All public endpoints conform to a published OpenAPI 3.1.0 contract; additive-only within a MAJOR, 180-day deprecation window; event consumers must tolerate unknown fields (tolerant reader). Contract tests gate CI." `[evidence: contract-test run URI]`
 
 ### §10.4 interactionCapability
 
-The degree to which the software supports humans in interacting with it. Renamed from "Usability" in ISO 25010:2023 to acknowledge that interaction includes more than ease-of-use — it spans understandability, error recovery, accessibility, and emotional engagement.
+The degree to which the software supports humans in interacting with it. Renamed from "Usability" in ISO 25010:2023 to acknowledge that interaction spans more than ease-of-use — understandability, error recovery, accessibility, and engagement.
+
+**Who the "user" is decides how — and whether — this applies.** For a **GUI/end-user product**, the user is a human at a screen and every sub-characteristic reads literally. For an **SDK/library/CLI/API**, the user is the *integrating developer* and these reinterpret as developer experience — discoverability, time-to-first-successful-call, guardrails against misuse, self-explaining errors. For a **fully headless artifact** with neither surface, `status: not_applicable` across the characteristic is the honest posture, not a gap to paper over.
 
 Sub-characteristics:
 
-1. **appropriatenessRecognizability** — Whether users can quickly tell whether the software is the right tool for their task. *Example claim*: "Landing page communicates supported task scope within 5 seconds of first view."
-2. **learnability** — How quickly new users become effective. *Example claim*: "New HR coordinators complete the certification flow in under 30 minutes without supervision."
-3. **operability** — Ease and accuracy of routine use. *Example claim*: "Common workflows completable in ≤4 clicks from the home dashboard."
-4. **userErrorProtection** — How well the software prevents user mistakes and helps recover from them. *Example claim*: "Destructive actions require confirmation; deleted records are recoverable for 30 days."
-5. **userEngagement** — Whether the software's interaction surface is pleasant or motivating to use. *Example claim*: "Workflow progress is visible on every page with completion percentage."
-6. **inclusivity** — Whether people with disabilities can use the software effectively. Accessibility lives here in ISO 25010:2023. *Example claim*: "WCAG 2.2 AA conformance verified by annual third-party audit."
-7. **userAssistance** — Available help when users get stuck — inline tips, runbooks, support paths. *Example claim*: "Inline help on every form field; contextual runbook links from each error message."
-8. **selfDescriptiveness** — Whether the software explains itself — UI labels, error messages, prompts that don't require external documentation to interpret. *Example claim*: "Error messages name the failed precondition and the remediation path."
+1. **appropriatenessRecognizability** — Whether users can quickly tell whether the software is the right tool for their task.
+   - *Declared as:* GUI = how fast task scope is communicated; SDK/API = whether the README/reference makes supported use cases and boundaries obvious before integration.
+   - *Example (GUI):* "Landing page communicates supported task scope within 5 seconds of first view."
+   - *Example (SDK):* "README states supported runtimes, the three core use cases, and explicit non-goals above the fold."
+
+2. **learnability** — How quickly a new user becomes effective.
+   - *Declared as:* GUI = time for a new user to complete a core task unaided; SDK/API = time-to-first-successful-call and whether the happy-path example runs as-is.
+   - *Example (GUI):* "New HR coordinators complete the certification flow in under 30 minutes without supervision."
+   - *Example (SDK):* "Documented quickstart yields a working call in under 10 minutes; copy-paste example compiles unmodified."
+
+3. **operability** — Ease and accuracy of routine use.
+   - *Declared as:* GUI = effort for common workflows; SDK/CLI = ergonomics of the common path (sensible defaults, composability, no required boilerplate).
+   - *Example (GUI):* "Common workflows completable in ≤4 clicks from the home dashboard."
+   - *Example (CLI):* "Default invocation needs no flags; every command supports `--json` for scripting."
+
+4. **userErrorProtection** — How well the software prevents mistakes and helps recover from them.
+   - *Declared as:* guardrails against destructive or invalid actions and the recovery path. For an SDK/API this is type-safety, validation-at-the-boundary, and reversibility — and note the security overlap: the API enforces the rule, the UI only hides the control (see §10.6).
+   - *Example (GUI):* "Destructive actions require confirmation; deleted records are recoverable for 30 days."
+   - *Example (SDK):* "Invalid argument combinations fail at call time with a typed error, never a silent partial write."
+
+5. **userEngagement** — Whether the interaction surface is pleasant or motivating to use. Most literal for end-user products; for infrastructure and SDKs the honest posture is often `not_applicable`. *Example (GUI):* "Workflow progress is visible on every page with completion percentage."
+
+6. **inclusivity** — Whether people with disabilities can use the software effectively; accessibility lives here in ISO 25010:2023.
+   - *Declared as:* the conformance target and how it was checked; `verified` needs an audit, not a self-assessment. Anchor via `industryRefs[]`: WCAG 2.2 A/AA/AAA, EN 301 549, Section 508.
+   - *Example:* "WCAG 2.2 AA conformance verified by annual third-party audit." `[evidence: audit report URI]`
+
+7. **userAssistance** — Help available when users get stuck.
+   - *Declared as:* GUI = inline help, runbooks, support paths; SDK/API = reference completeness, worked examples, and whether errors link to docs.
+   - *Example (GUI):* "Inline help on every form field; contextual runbook links from each error message."
+   - *Example (SDK):* "Every public symbol has reference docs with a runnable example; error messages carry a docs URL."
+
+8. **selfDescriptiveness** — Whether the software explains itself without external documentation — labels, prompts, and above all error messages.
+   - *Declared as:* whether an error names the failed precondition and the remediation, in both UI and API/CLI output.
+   - *Example:* "Error messages name the failed precondition and the remediation path; API errors use RFC 9457 problem+json."
 
 ### §10.5 reliability
 
@@ -521,26 +577,52 @@ Sub-characteristics:
 
 Protection of information and functions so that authorized actors have appropriate access while unauthorized access is prevented.
 
+**Who enforces the control decides what a claim asserts.** For **operated software** (SaaS), the producer enforces controls at runtime and `verified` means pentest results, runtime configuration, and audit evidence against the as-run system. For **shipped software** (COTS/on-prem), the producer supplies secure defaults plus a hardening guide and the *consumer* enforces — a claim states what the artifact does out of the box vs. what the deployment must add. For an **embedded SDK/library**, security means not introducing a vulnerability into the host: safe defaults, no injection sinks, no secret mishandling — the consuming application owns the perimeter. A principle across all three: authorization is enforced per resource at the API, never assumed from a UI that merely hides the control.
+
 Sub-characteristics:
 
-1. **confidentiality** — Data is accessible only to those authorized to see it. *Example claim*: "PII encrypted at rest with KMS, TLS 1.3 in transit; tenant_id enforced at the query layer."
+1. **confidentiality** — Data is accessible only to those authorized to see it.
+   - *Declared as:* the data classification and the controls per class (encryption at rest / in transit, tenant isolation). Note the observability tension (`observability_pii`) — rich structured logs can leak PII into lower-trust log stores; declare the redaction posture.
+   - *Example:* "PII encrypted at rest with KMS, TLS 1.3 in transit; tenant_id enforced at the query layer; PII fields redacted from logs."
+
 2. **integrity** — Data and functions are protected from unauthorized modification. *Example claim*: "All write operations signed; tampering is detectable via audit-log hash chain."
-3. **nonRepudiation** — Actions can be proven attributable to specific actors after the fact. *Example claim*: "Audit log signed daily and exported to corporate SIEM; records cannot be deleted by application code."
-4. **accountability** — Each action can be traced to the actor who performed it. *Example claim*: "Every write logged with actor, timestamp, and before/after values to immutable audit store."
-5. **authenticity** — Identities are reliably verified. *Example claim*: "OIDC at the edge; mTLS between services; no local password store."
-6. **resistance** — The software withstands attacks (malformed input, replay, injection, brute-force). *Example claim*: "Annual pentest with no known critical findings; SAST in CI; OWASP ASVS L2."
+
+3. **nonRepudiation** — Actions can be proven attributable to a specific actor *to a third party after the fact* — the evidentiary bar (signed, tamper-evident). Stronger than `accountability`. *Example claim*: "Audit log signed daily and exported to corporate SIEM; records cannot be deleted by application code."
+
+4. **accountability** — Each action can be *internally* traced to the actor who performed it — the operational bar (who did what, when). It rises to `nonRepudiation` only when the trail is tamper-evident enough to stand as external proof. *Example claim*: "Every write logged with actor, timestamp, and before/after values to an append-only store."
+
+5. **authenticity** — Actors — and, where relevant, data and artifacts — are verified to be what they claim to be.
+   - *Declared as:* the identity mechanism at each boundary (human, service-to-service, and for shipped artifacts, supply-chain provenance). `verified` names the mechanism and where it is enforced, not just that "auth exists." Anchor via `industryRefs[]`: OIDC, OAuth 2.x, SAML, mTLS, WebAuthn/passkeys; SLSA / in-toto for artifact authenticity.
+   - *Example (SaaS):* "OIDC at the edge; mTLS between services; no local password store; sessions rotate on privilege change."
+   - *Example (shipped artifact):* "Releases are cosign-signed with SLSA build-L3 provenance published; consumers verify the signature before install."
+
+6. **resistance** — The software withstands attacks (malformed input, replay, injection, brute-force).
+   - *Declared as:* the validation-at-every-boundary posture and the assurance activities behind it. Anchor via `industryRefs[]`: OWASP ASVS L1/L2/L3, NIST SP 800-218.
+   - *Example:* "Input validated at every API endpoint regardless of client checks; annual pentest, no critical findings; SAST in CI; OWASP ASVS L2." `[evidence: pentest report URI]`
 
 ### §10.7 maintainability
 
 The ease with which the software can be modified to correct, improve, or adapt to changes.
 
+**Who maintains it decides whether this is a private or a purchased property.** For **closed SaaS**, maintainability is the producer's internal concern; consumers rarely see the source, so a coarse `overall` claim is often all that is meaningful. For **OSS, SDKs, and source-available / COTS-with-extensions**, maintainability is something the *consumer is buying into* — they will read, extend, test, and debug it — so the sub-characteristics carry real third-party weight and deserve `verified` evidence.
+
 Sub-characteristics:
 
 1. **modularity** — Components are decomposed so changes in one have minimal impact on others. *Example claim*: "Workflow steps are configuration-driven, not hardcoded; new step types added without touching the orchestration core."
-2. **reusability** — Components can be used in multiple contexts. *Example claim*: "Identity-handling utilities published as an internal package; consumed by 3 other internal portals."
-3. **analysability** — How easily the software can be diagnosed, understood, or measured. British-English spelling preserved from the standard. *Example claim*: "Structured logs with correlation IDs across services; ADRs in `/docs/adr` explain every architectural decision."
+
+2. **reusability** — Components can be lifted into other contexts without dragging the whole system with them.
+   - *Declared as:* what is deliberately packaged for reuse (published modules, stable internal APIs) vs. what is application-specific. For an SDK this is the whole value proposition; for a leaf service it may honestly be `not_applicable`.
+   - *Example:* "Identity-handling utilities published as a versioned internal package, consumed by 3 other portals; the orchestration core is intentionally app-specific and not reusable."
+
+3. **analysability** — How easily the software can be diagnosed, understood, and measured. British-English spelling preserved from the standard. This is where **observability** folds in — ISO 25010 gives it no first-class home, so SAM carries the operational surface in `extensions.observability`; an analysability claim should reference it rather than restate it.
+   - *Declared as:* whether a maintainer can understand *and diagnose* the system — structured logs, correlation IDs, traces, decision records — ideally without reading source. Cross-reference `extensions.observability` for the runtime signals.
+   - *Example:* "Structured JSON logs with correlation IDs across services; per-endpoint latency/error dashboards; ADRs in `/docs/adr` explain every architectural decision. Production issues diagnosable from telemetry alone (see `extensions.observability`)."
+
 4. **modifiability** — Ease of making targeted changes without breaking adjacent behavior. *Example claim*: "85% behavioral test coverage; contract tests catch regressions at service boundaries."
-5. **testability** — How easily the software can be tested. *Example claim*: "Every endpoint has a contract test; sandbox-friendly dependencies for local development."
+
+5. **testability** — How easily the software's behavior can be verified.
+   - *Declared as:* behavioral coverage (every endpoint, error path, and business rule has a test), not a line-coverage percentage — line coverage measures execution, not verified behavior. Beware the coverage↔maintainability tension (`test_suite_tension`): brittle implementation-coupled tests inflate the number while blocking refactors; contract and property-based tests survive refactors. `verified` should point at a test-report artifact.
+   - *Example:* "Every public endpoint has a contract test; every declared failure mode has a triggering test; property-based tests on the pricing rules; suite runs in <90 s in CI." `[evidence: test-report URI]`
 
 ### §10.8 flexibility
 

@@ -1,0 +1,61 @@
+{
+  "registry": "sam-delivery-forms",
+  "version": "0.1",
+  "description": "Well-known identifiers for how software is delivered and who operates it. The delivery form governs how a quality claim reads: the same qualityAttributes key asserts different things for software the producer runs (a measured SLO) versus software the consumer runs (a default plus sizing/hardening guidance). Referenced from SPECIFICATION.md §10; targets an intent.deliveryForm field in a future schema version. Advisory, not schema-enforced. Source model (proprietary / open_source / source_available) is an ORTHOGONAL axis, not a delivery form — it affects the maintainability reading (§10.7), not who operates the software.",
+  "entries": [
+    {
+      "id": "hosted_service",
+      "name": "Hosted service",
+      "aka": ["SaaS", "managed service", "cloud service", "API service"],
+      "operator": "producer",
+      "typical_layers": ["service", "product"],
+      "perimeter_owner": "producer",
+      "claims_read_as": "Measured SLOs the producer engineers to and monitors. The producer owns the runtime, capacity, and security perimeter; `verified` means production telemetry or a load test against the as-run topology. Pairs with envelope.serviceLevels."
+    },
+    {
+      "id": "self_hosted_app",
+      "name": "Self-hosted application",
+      "aka": ["COTS", "on-prem", "packaged application", "container image", "Helm chart", "installer"],
+      "operator": "consumer",
+      "typical_layers": ["artifact", "product"],
+      "perimeter_owner": "consumer",
+      "claims_read_as": "Secure and performant defaults plus the sizing and hardening guidance the consumer needs to operate it. The producer cannot promise an SLO on hardware it does not own; claims state what the artifact does out of the box versus what the deployment must add. Performance is expressed as sizing guidance per transaction type on a named reference configuration."
+    },
+    {
+      "id": "library",
+      "name": "Library / SDK",
+      "aka": ["SDK", "package", "framework", "dependency", "module"],
+      "operator": "consumer",
+      "typical_layers": ["artifact"],
+      "perimeter_owner": "host application",
+      "claims_read_as": "Behavior of code linked into a host process the consumer builds. Compatibility is API/ABI stability and host-process citizenship (no global mutable state, bounded resources, no captured transitive-dependency versions); security is not introducing a vulnerability into the host. The consuming application owns the deployment perimeter."
+    },
+    {
+      "id": "cli_tool",
+      "name": "Command-line tool",
+      "aka": ["CLI", "binary", "utility", "command-line application"],
+      "operator": "consumer",
+      "typical_layers": ["artifact"],
+      "perimeter_owner": "consumer",
+      "claims_read_as": "Behavior of a tool the consumer runs locally or in CI. interactionCapability reads as developer experience: invocation ergonomics, sensible defaults, scriptability, and stable output / exit-code contracts."
+    },
+    {
+      "id": "infrastructure_component",
+      "name": "Infrastructure component",
+      "aka": ["database", "message broker", "reverse proxy", "web server", "cache", "queue"],
+      "operator": "consumer",
+      "typical_layers": ["artifact", "service"],
+      "perimeter_owner": "consumer",
+      "claims_read_as": "Software other software depends on and the consumer operates. Claims center on the operational envelope and capacity guidance; a component of this form typically appears in another producer's envelope.dependencies[]. (Caddy is an example of this form.)"
+    },
+    {
+      "id": "appliance",
+      "name": "Appliance",
+      "aka": ["virtual appliance", "firmware", "embedded image", "sealed unit"],
+      "operator": "consumer",
+      "typical_layers": ["artifact", "product"],
+      "perimeter_owner": "shared",
+      "claims_read_as": "A sealed unit the consumer places but does not modify. The producer guarantees the internals as a whole; the consumer controls placement and operational context, not the components inside. Claims read as whole-unit guarantees plus the operational envelope the unit is certified for."
+    }
+  ]
+}

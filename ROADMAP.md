@@ -63,7 +63,11 @@ Closes the gap that producers can't declare "this implements the circuit-breaker
 
 ### §10 → authoring reference
 
-Expand §10 from definitions into a per-characteristic **SAM lens** — for each characteristic, ~3 lines of SAM-specific authoring guidance ISO structurally cannot have: how you declare it (typical `status` values, what a `verified` claim requires here, which `industryRefs[]` anchor it, whether the concept also lives in `envelope`/`extensions`) and what an honest claim looks like (when `not_applicable` is the truthful call). Evens out the thin entries (e.g. `compatibility.coExistence`, several `performanceEfficiency` subs) that still read close to a restatement, seeds the deferred Authoring Guide inline, and makes §10 decisively non-derivative of ISO.
+Expand §10 from definitions into a per-characteristic **SAM lens** — for each characteristic, ~3 lines of SAM-specific authoring guidance ISO structurally cannot have: how you declare it (typical `status` values, what a `verified` claim requires here, which `industryRefs[]` anchor it, whether the concept also lives in `envelope`/`extensions`) and what an honest claim looks like (when `not_applicable` is the truthful call). Evens out the thin entries (e.g. `compatibility.coExistence`, several `performanceEfficiency` subs) that still read close to a restatement, seeds the deferred Authoring Guide inline, and makes §10 decisively non-derivative of ISO. *(In progress — §10.2/10.3/10.4/10.6/10.7 done, grounded on the delivery-form taxonomy below.)*
+
+### `intent.deliveryForm`
+
+A declared enum for how the software is delivered and who operates it — `hosted_service` / `self_hosted_app` / `library` / `cli_tool` / `infrastructure_component` / `appliance`, seeded in `registry/delivery-forms.json`. This is the axis §10 already leans on: the same quality key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. Making it a first-class field lets consumers filter and lets tooling apply the right reading automatically. Source model (proprietary / open_source / source_available) is an orthogonal candidate field, not part of this enum.
 
 ## Spec content deferred from v0.2
 
@@ -86,6 +90,7 @@ These are prose-heavy and depend on observed authoring patterns. They'll land on
 - **Growth of `standards.json`** — community contributions adding aliases and new entries as real SAMs cite standards we haven't seen yet.
 - **Governance model** — when a new standard is added, who decides the canonical spelling? The current advisory-not-enforced status keeps the cost low; if/when we reach working-group adoption the model formalizes.
 - **`registry/patterns.json`** — seeded in v0.3 alongside `architecturalPatterns[]`.
+- **`registry/delivery-forms.json`** — shipped as an advisory registry; formalizes into the `intent.deliveryForm` enum (above) in v0.3.
 
 ## Long-horizon
 

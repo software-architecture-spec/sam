@@ -6,6 +6,7 @@ Companion data files for the SAM specification. **Advisory only — not enforced
 
 - **`standards.json`** — canonical spellings of common values for `industryRefs.standard` across SAM manifests. Lets producers pick a stable spelling and lets consumers normalize aliases when analyzing many manifests. Modeled on the SPDX License List pattern.
 - **`tensions.json`** — well-known identifiers for `tensionsDeclared[].tension`, referenced from `SPECIFICATION.md §5.1.11`. Producers SHOULD use one of these IDs when the named tension applies; for domain-specific tensions, use the `x:` prefix.
+- **`delivery-forms.json`** — canonical identifiers for how software is delivered and who operates it (`hosted_service`, `self_hosted_app`, `library`, `cli_tool`, `infrastructure_component`, `appliance`). Referenced from `SPECIFICATION.md §10`, where the delivery form governs how a quality claim reads — the same key asserts a measured SLO for producer-operated software and a default-plus-sizing-guidance for consumer-operated software. Targets an `intent.deliveryForm` field in a future schema version. Source model (proprietary / open_source / source_available) is an orthogonal axis, not a delivery form.
 
 ## Why advisory, not enforced
 
@@ -38,6 +39,14 @@ Both registries are flat JSON files with `registry`, `version`, `description`, a
 ```
 
 `id` is the value that goes in `tensionsDeclared[].tension`. `name`, `summary`, and `cite` describe the tension to humans and auditors. `applies_to` names the SAM `qualityAttributes` characteristics or `extensions` that the tension typically couples.
+
+**`delivery-forms.json` entry:**
+
+```json
+{ "id": "...", "name": "...", "aka": ["..."], "operator": "producer|consumer|shared", "typical_layers": ["..."], "perimeter_owner": "...", "claims_read_as": "..." }
+```
+
+`id` is the canonical delivery-form identifier (target value for a future `intent.deliveryForm`). `aka` lists common names that map to it (e.g. `SaaS`, `COTS`, `SDK`). `operator` is who runs the software (`producer`, `consumer`, or `shared`). `typical_layers` names the `subject.layer` values the form usually appears at. `perimeter_owner` names who owns the security/operational boundary. `claims_read_as` explains, for authors, how §10 quality claims should be interpreted for that form.
 
 ## Versioning
 
