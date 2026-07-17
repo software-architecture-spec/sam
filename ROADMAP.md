@@ -32,35 +32,31 @@ Drawn from a review of canonical systems-design literature (Release It! / DDIA /
 
 ### `architecturalStyle` (declarative)
 
-Single-value enum on `intent` declaring the architectural style:
+Shipped as a single-value **hard enum** on `intent`:
 
 `monolith | modular_monolith | microservices | serverless | event_driven | actor | hybrid`
 
-Producers can scope their claims; consumers can match the style against their target architecture. Distinct from `subject.layer` (granularity of *this* manifest) and from `subject.components[]` (composition).
+Producers scope their claims; consumers match the style against their target architecture. Distinct from `subject.layer` (granularity of *this* manifest) and from `subject.components[]` (composition). Design-context, not a graded claim (§5.5).
 
-### `architecturalPatterns[]` + `registry/patterns.json`
+### `intent.architecturalPatterns[]` + `registry/patterns.json`
 
-A new array on `qualityAttributes.*.overall` (or top-level `architecturalPatterns[]` — to be decided) for declaring named patterns the software implements:
+Shipped as an **open string array** on `intent` — a flat list of pattern IDs the software implements:
 
 ```
-[
-  { "id": "circuit_breaker", "appliesTo": ["dependencies", "reliability"] },
-  { "id": "cqrs", "appliesTo": ["data"] },
-  { "id": "cache_aside", "appliesTo": ["performance"] }
-]
+"architecturalPatterns": ["circuit_breaker", "cqrs", "cache_aside"]
 ```
 
-Companion `registry/patterns.json` (same shape as `tensions.json`) seeds canonical IDs from Release It! (`circuit_breaker`, `bulkhead`, `timeout`, `fail_fast`, `retry_with_backoff`, `fallback`), DDIA (`event_sourcing`, `cqrs`, `saga`, `outbox`), Fowler PEAA (`unit_of_work`, `repository`), and caching literature (`cache_aside`, `write_through`, `write_back`).
+Companion `registry/patterns.json` (same shape as `tensions.json`) seeds 15 canonical IDs from Release It! (`circuit_breaker`, `bulkhead`, `timeout`, `fail_fast`, `retry_with_backoff`, `fallback`), DDIA (`event_sourcing`, `cqrs`, `saga`, `outbox`), Fowler PEAA (`unit_of_work`, `repository`), and caching literature (`cache_aside`, `write_through`, `write_back`). Advisory (open string, not a hard enum — like `tensionsDeclared.tension`); an unregistered, non-`x:`-prefixed ID is `schema-valid-but-spec-nonconforming`. Each registry entry's `applies_to` maps the pattern to the `qualityAttributes` sub-characteristic it serves — the pattern's evidentiary weight lives there, not on the pattern (§5.5).
 
-Closes the gap that producers can't declare "this implements the circuit-breaker pattern" or "this is event-sourced" — vocabulary every senior engineer expects to see.
+Closes the gap that producers couldn't name "this implements circuit-breaker" or "this is event-sourced" — vocabulary every senior engineer expects.
 
 ### Storage architecture detail
 
-`envelope.persistence` today is a `stores[]` enum (`sql`, `kv`, `document`, `blob`, `search`, `queue`, `filesystem`, `other`). v0.3 candidates: replication topology (single / primary-replica / multi-primary / sharded), consistency model (strong / read-after-write / eventual), backup posture (none / snapshot / continuous), encryption posture (at-rest / in-flight / both).
+Extended `envelope.persistence` (was just `required` + `stores[]`) with four hard enums: `replication` (single / primary_replica / multi_primary / sharded), `consistency` (strong / read_after_write / eventual), `backup` (none / snapshot / continuous), `encryption` (none / at_rest / in_flight / both).
 
 ### Concurrency-model detail
 
-`envelope.instantiation.mode` today covers singleton / multi_instance / leader_elected / sharded. v0.3 candidates: ordering guarantees (none / per-key / total), idempotency claims, conflict-resolution model (last-write-wins / CRDT / application-defined).
+Extended `envelope.instantiation` (was just `mode` + `coordinationDependency`) with three hard enums: `ordering` (none / per_key / total), `idempotency` (none / keyed / global), `conflictResolution` (last_write_wins / crdt / application_defined / none).
 
 ### §10 → authoring reference
 
@@ -111,7 +107,7 @@ These are prose-heavy and depend on observed authoring patterns. They'll land on
 - **Growth of `standards.json`** — community contributions adding aliases and new entries as real SAMs cite standards we haven't seen yet.
 - **Governance model** — when a new standard is added, who decides the canonical spelling? The current advisory-not-enforced status keeps the cost low; if/when we reach working-group adoption the model formalizes.
 - **`registry/patterns.json`** — seeded in v0.3 alongside `architecturalPatterns[]`.
-- **`registry/delivery-forms.json`** — shipped as an advisory registry; formalizes into the `intent.deliveryForm` enum (above) in v0.3.
+- **`registry/delivery-forms.json`** — advisory registry (9 forms); its vocabulary is the `intent.deliveryForm` / `envelope.dependencies[].deliveryForm` enum as of v0.3.
 
 ## Long-horizon
 
@@ -122,7 +118,7 @@ These are prose-heavy and depend on observed authoring patterns. They'll land on
 
 ## Open questions
 
-These came out of consumer-side review and design-pattern coverage analysis. Each is either resolved (above), v0.3 candidate (above), or out-of-scope (below) — listed here so the reasoning is visible.
+These came out of consumer-side review and design-pattern coverage analysis. Each is either resolved (above/below), still open, or out-of-scope (below) — listed here so the reasoning is visible.
 
 **Resolved in v0.2:**
 
@@ -131,16 +127,18 @@ These came out of consumer-side review and design-pattern coverage analysis. Eac
 - ✅ **SLA / SLO surface** — landed as `envelope.serviceLevels` (service/product layer only).
 - ✅ **ISO 25010 access dependency** — addressed via `SPECIFICATION.md §10` (SAM's own definitions, anchored to the ISO names and framed through SAM's declaration model) plus §1.5 open companions. §10 is informative; the ISO standard remains authoritative for the model.
 
-**Open / v0.3 candidates:**
+**Resolved in v0.3:**
 
-- **Architectural style declaration.** Reviewer noted SAM has no slot for "this is event-sourced microservices" — common shorthand vocabulary. *Proposed:* `intent.architecturalStyle` enum.
-- **Pattern catalog.** Canonical patterns from Release It! / DDIA / Fowler PEAA / caching literature aren't nameable in SAM today. *Proposed:* `architecturalPatterns[]` + `registry/patterns.json`.
-- **Storage architecture detail.** `envelope.persistence` is thin; reviewers want replication topology, consistency model, backup posture. *Proposed:* expand `envelope.persistence` for v0.3.
-- **Concurrency-model detail.** `envelope.instantiation.mode` is thin; reviewers want ordering guarantees, idempotency, conflict resolution. *Proposed:* expand `envelope.instantiation` for v0.3.
+- ✅ **Architectural style declaration.** Landed as `intent.architecturalStyle` (hard enum).
+- ✅ **Pattern catalog.** Landed as `intent.architecturalPatterns[]` (open string) + `registry/patterns.json` (15 IDs).
+- ✅ **Storage architecture detail.** Landed as `envelope.persistence.{replication, consistency, backup, encryption}`.
+- ✅ **Concurrency-model detail.** Landed as `envelope.instantiation.{ordering, idempotency, conflictResolution}`.
+- ✅ **Delivery form + dependency-type split.** Landed as `intent.deliveryForm` (9-form hard enum) and the `dependencies[].type` → `deliveryForm` + `role` split (§6.6); closed the §10 orphaned-guidance gap.
+- ✅ **Design-context gradability.** `§5.5` scopes the architecture fields as declarative design-context, not graded claims (deliberately not an evidence ladder — architecture resists direct evidence).
 
 **Open / no decision yet:**
 
-- **Replaceability semantics.** `SPECIFICATION.md §10.8` (v0.2) now gives authoring guidance — prefer `declared` over `not_applicable` unless there are genuinely no consumers to disrupt. Still open for v0.3: whether to turn that guidance into a schema-enforced constraint (gathering authoring feedback first).
+- **Replaceability semantics.** `SPECIFICATION.md §10.8` gives authoring guidance — prefer `declared` over `not_applicable` unless there are genuinely no consumers to disrupt. Still open for v0.4: whether to turn that guidance into a schema-enforced constraint (gathering authoring feedback first).
 - **Layer terminology clarity.** Reviewer had to infer the `artifact` / `service` / `product` hierarchy without the spec. The model itself is sound; the README and authoring guide can do better at signaling the hierarchy at a glance.
 
 **Explicitly out of scope (carried forward):**
